@@ -29,7 +29,13 @@ img.ph{max-width:100%;max-height:200px;border-radius:8px;margin-top:6px;display:
 #chatbar{position:fixed;left:0;right:0;bottom:0;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));background:var(--bg);display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--bd)}
 #chatbar input{flex:1}
 label.up{display:inline-block;margin-top:6px;font-size:14px;color:var(--ac);border:1px dashed var(--ac);border-radius:8px;padding:5px 10px}
-.tag{font-weight:700;color:var(--ac);background:rgba(47,125,91,.14);border-radius:6px;padding:0 3px}.msg.me .tag{color:#fff;background:rgba(255,255,255,.25)}.msg.ment{border-left:4px solid var(--ac)}#chips{flex:1 1 100%;display:flex;gap:6px;overflow-x:auto}#chips button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:16px;padding:4px 10px;font-size:14px}
+.tag{font-weight:700;color:var(--ac);background:rgba(47,125,91,.14);border-radius:6px;padding:0 3px}.msg.me .tag{color:#fff;background:rgba(255,255,255,.25)}.msg.ment{border-left:4px solid var(--ac)}#chips,#chips2{flex:1 1 100%;display:flex;gap:6px;overflow-x:auto}#chips button,#chips2 button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:16px;padding:4px 10px;font-size:14px}
+.av{width:var(--s,26px);height:var(--s,26px);border-radius:50%;object-fit:cover;vertical-align:middle;display:inline-flex;align-items:center;justify-content:center;background:var(--ac);color:#fff;font-size:calc(var(--s,26px)*.45);font-weight:700;flex:none}
+#tabs .av{margin-right:6px;--s:22px}.msg b .av{margin-right:4px}
+.stats{display:flex;gap:8px}.stats div{flex:1;text-align:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 4px}.stats b{display:block;font-size:22px}.stats .bad b{color:var(--bad)}
+.prow{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--bd);font-size:14px}.prow .n{flex:1}.prow em{font-style:normal;min-width:48px;text-align:center}
+#crop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff}
+#crop canvas{width:260px;height:260px;border-radius:50%;background:#000;touch-action:none;border:3px solid #fff}
 .err{color:var(--bad);font-size:14px;width:100%}
 </style></head><body>
 <header><h1>🏠 Việc nhà</h1><span class="mu" id="who"></span></header>
@@ -59,7 +65,7 @@ async function init(){
 }
 async function poll(){
   if(document.hidden||!me||!members[me])return;
-  const sig=()=>JSON.stringify([chat.map(c=>c.id),tasks.map(t=>[t.id,t.done,t.photo]),Object.keys(members)]);
+  const sig=()=>JSON.stringify([chat.map(c=>c.id),tasks.map(t=>[t.id,t.done,t.photo]),Object.values(members).map(x=>x.id+x.name+(x.avatar||""))]);
   const b=sig();await load();if(sig()!==b)render();
 }
 async function load(){
@@ -92,10 +98,10 @@ function joinView(){
     if(error)return $("#err").textContent=error.message;await init();if(!members[me]&&!window.loadErr)$("#err").textContent="Đã tham gia nhưng chưa đọc được danh sách (thiếu quyền đọc). Chạy fix.sql trong Supabase."};
 }
 function render(){
-  $("#who").textContent="Xin chào, "+nm(me);
+  $("#who").innerHTML=av(me,24)+" "+esc(nm(me));
   const ids=Object.keys(members).sort((a,b)=>a===me?-1:b===me?1:nm(a).localeCompare(nm(b)));
-  $("#tabs").innerHTML=[["all","📋 Tổng hợp"],["chat","💬 Chat"],...ids.map(i=>[i,i===me?"👤 Của tôi":nm(i)])]
-    .map(([k,l])=>`<button class="${k===tab?"on":""}" data-k="${esc(k)}">${esc(l)}</button>`).join("");
+  $("#tabs").innerHTML=[["all","📋 Tổng hợp"],["chat","💬 Chat"],...ids.map(i=>[i,av(i)+esc(i===me?"Của tôi":nm(i))])]
+    .map(([k,l])=>`<button class="${k===tab?"on":""}" data-k="${esc(k)}">${l}</button>`).join("");
   $("#tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{tab=b.dataset.k;$("#main").dataset.t="";render();window.scrollTo(0,0)});
   const cb=$("#chatbar");if(cb&&tab!=="chat")cb.remove();
   if(tab==="chat")return renderChat();
@@ -113,7 +119,7 @@ function taskCard(t,showWho){
   return `<div class="card ${t.done?"done":""}"><div class="row">
   <input type="checkbox" ${t.done?"checked":""} ${mine?"":"disabled"} data-done="${t.id}">
   <div style="flex:1"><div class="t">${esc(t.title)}</div>
-  <div class="mu ${late?"late":""}">${showWho?esc(nm(t.assignee))+" · ":""}${when(t)}${late?" · QUÁ HẠN":""}${t.done?" · ✅ xong":""}</div>
+  <div class="mu ${late?"late":""}">${showWho?av(t.assignee,18)+" "+esc(nm(t.assignee))+" · ":""}${when(t)}${t.created_by&&t.created_by!==t.assignee?" · giao bởi "+esc(nm(t.created_by)):""}${late?" · QUÁ HẠN":""}${t.done?" · ✅ xong":""}</div>
   ${t.photo?`<a href="${esc(t.photo)}" target="_blank"><img class="ph" src="${esc(t.photo)}" alt="ảnh minh chứng"></a>`:""}
   ${mine&&!t.done?`<label class="up">📷 Gửi ảnh<input type="file" accept="image/*" hidden data-ph="${t.id}"></label>`:""}
   </div><button class="mu" style="border:0;background:none" data-del="${t.id}" title="Xoá">✕</button></div></div>`;
@@ -136,30 +142,74 @@ function bind(){
       const r=await sb.from("tasks").update({photo:url}).eq("id",id);if(r.error)throw r.error;
     }catch(e){alert("Gửi ảnh lỗi: "+e.message)}await load();render()});
 }
+function av(id,sz){const m=members[id]||{},st=sz?`style="--s:${sz}px"`:"";return m.avatar?`<img class="av" ${st} src="${esc(m.avatar)}" alt="">`:`<span class="av" ${st}>${esc((m.name||"?").trim().charAt(0).toUpperCase())}</span>`}
+function stat(list){const d=today(),t=list.filter(x=>x.due===d);return{n:t.length,done:t.filter(x=>x.done).length,late:t.filter(isLate).length,old:list.filter(x=>!x.done&&x.due&&x.due<d).length}}
+function statBox(s){return `<div class="stats"><div><b>${s.n}</b><span class="mu">Việc hôm nay</span></div><div><b>${s.done}</b><span class="mu">Hoàn thành</span></div><div class="bad"><b>${s.late}</b><span class="mu">Quá hạn</span></div></div>`+(s.old?`<p class="mu late">Còn tồn từ các ngày trước: ${s.old} việc</p>`:"")}
+function peopleRows(){return Object.keys(members).map(id=>{const s=stat(tasks.filter(x=>x.assignee===id));return `<div class="prow">${av(id,26)}<span class="n">${esc(nm(id))}</span><em>${s.n} việc</em><em>✅ ${s.done}</em><em class="${s.late?"late":""}">⏰ ${s.late}</em></div>`}).join("")}
+function parseTags(text){const ids=[];let t=text;Object.entries(members).sort((a,b)=>b[1].name.length-a[1].name.length).forEach(([k,v])=>{const tag=("@"+v.name).toLowerCase();let i;while((i=t.toLowerCase().indexOf(tag))>=0){if(!ids.includes(k))ids.push(k);t=t.slice(0,i)+" "+t.slice(i+tag.length)}});return{ids,title:t.replace(/\s+/g," ").trim()}}
+function cropAvatar(file){
+  const img=new Image();
+  img.onerror=()=>alert("Không đọc được ảnh");
+  img.onload=()=>{
+    const ov=document.createElement("div");ov.id="crop";
+    ov.innerHTML='<div>Kéo để chỉnh vị trí, thanh trượt để phóng to</div><canvas width="260" height="260"></canvas><input type="range" min="1" max="3" step="0.02" value="1" style="width:240px"><div><button class="pri" id="cok">Lưu</button> <button class="sec" id="cno" style="color:#fff;border-color:#fff">Huỷ</button></div>';
+    document.body.appendChild(ov);
+    const cv=ov.querySelector("canvas"),rg=ov.querySelector("input"),base=260/Math.min(img.width,img.height);
+    let z=1,ox=0,oy=0,d=null;
+    const draw=(c,S)=>{const k=S/260,sc=base*z*k,w=img.width*sc,h=img.height*sc;c.fillStyle="#000";c.fillRect(0,0,S,S);c.drawImage(img,(S-w)/2+ox*k,(S-h)/2+oy*k,w,h)};
+    const go=()=>{const mx=(img.width*base*z-260)/2,my=(img.height*base*z-260)/2;ox=Math.max(-mx,Math.min(mx,ox));oy=Math.max(-my,Math.min(my,oy));draw(cv.getContext("2d"),260)};
+    rg.oninput=()=>{z=+rg.value;go()};
+    cv.onpointerdown=e=>{d=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+    cv.onpointermove=e=>{if(!d)return;ox+=e.clientX-d[0];oy+=e.clientY-d[1];d=[e.clientX,e.clientY];go()};
+    cv.onpointerup=cv.onpointercancel=()=>{d=null};
+    go();
+    ov.querySelector("#cno").onclick=()=>ov.remove();
+    ov.querySelector("#cok").onclick=()=>{
+      const o=document.createElement("canvas");o.width=o.height=256;draw(o.getContext("2d"),256);
+      o.toBlob(async b=>{try{
+        const path=me+"/avatar-"+Date.now()+".jpg";
+        const u=await sb.storage.from("proofs").upload(path,b,{contentType:"image/jpeg"});if(u.error)throw u.error;
+        const url=sb.storage.from("proofs").getPublicUrl(path).data.publicUrl;
+        const r=await sb.from("members").update({avatar:url}).eq("id",me);if(r.error)throw r.error;
+        ov.remove();await load();render();
+      }catch(e){alert("Lưu ảnh lỗi: "+e.message+" (đã chạy addavatar.sql chưa?)")}},"image/jpeg",.85)};
+  };
+  img.src=URL.createObjectURL(file);
+}
 function renderAll(){
   const m=$("#main");m.dataset.t="all";
   const open=tasks.filter(t=>!t.done).sort((a,b)=>key(a).localeCompare(key(b)));
   const done=tasks.filter(t=>t.done).sort((a,b)=>(b.done_at||"").localeCompare(a.done_at||"")).slice(0,5);
-  m.innerHTML=`<h3>Sắp tới & chưa xong (${open.length})</h3>`+(open.map(t=>taskCard(t,true)).join("")||'<p class="mu">Không có việc nào 🎉</p>')
+  m.innerHTML=`<h3>Hôm nay · cả nhà</h3>`+statBox(stat(tasks))+peopleRows()+`<p class="mu">Mỗi dòng: số việc hôm nay · ✅ xong · ⏰ quá hạn</p><h3>Sắp tới & chưa xong (${open.length})</h3>`+(open.map(t=>taskCard(t,true)).join("")||'<p class="mu">Không có việc nào 🎉</p>')
    +(done.length?`<h3>Mới hoàn thành</h3>`+done.map(t=>taskCard(t,true)).join(""):"");
   bind();
 }
 function renderPerson(id){
-  const m=$("#main");
+  const m=$("#main"),mine=id===me;
   if(m.dataset.t!==id){m.dataset.t=id;
-    m.innerHTML=`<form id="f" class="card"><input type="text" name="title" placeholder="Giao việc cho ${esc(id===me?"mình":nm(id))}…" required maxlength="120">
-    <input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">Thêm việc</button></form><div id="list"></div>`;
-    $("#f").onsubmit=async e=>{e.preventDefault();const f=e.target;
+    m.innerHTML=`<div id="top"></div>`+(mine?`<form id="f" class="card"><input type="text" name="title" placeholder="Việc cần làm… (tag @tên để giao cho người khác)" required maxlength="120"><div id="chips2"></div><input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">Thêm việc</button><div class="mu">Không tag ai thì việc là của bạn.</div></form>`:"")+`<div id="list"></div>`;
+    if(mine)$("#f").onsubmit=async e=>{e.preventDefault();const f=e.target,p=parseTags(f.title.value);
+      if(!p.title)return alert("Nhập nội dung việc (ngoài phần @tên)");
       if(f.st.value&&f.et.value&&f.et.value<=f.st.value)return alert("Giờ kết thúc phải sau giờ bắt đầu");
-      const{error}=await sb.from("tasks").insert({title:f.title.value.trim(),due:f.due.value||null,start_time:f.st.value||null,end_time:f.et.value||null,assignee:id});
-      if(error)return alert(error.message);f.title.value="";await load();render()};}
+      const ids=p.ids.length?p.ids:[me];
+      const{error}=await sb.from("tasks").insert(ids.map(a=>({title:p.title,due:f.due.value||null,start_time:f.st.value||null,end_time:f.et.value||null,assignee:a})));
+      if(error)return alert(error.message);f.title.value="";await load();render()};
+  }
   const list=tasks.filter(t=>t.assignee===id).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
-  $("#list").innerHTML=list.map(t=>taskCard(t,false)).join("")||'<p class="mu">Chưa có việc.</p>';
-  bind();
+  const top=`<div class="card row" style="align-items:center">${av(id,64)}<div style="flex:1"><b>${esc(nm(id))}</b><div class="mu">${mine?"Tab của bạn":"Việc của "+esc(nm(id))}</div></div>${mine?'<label class="up">📷 Đổi ảnh<input type="file" accept="image/*" hidden id="avf"></label>':""}</div><h3>Hôm nay</h3>`+statBox(stat(list));
+  const tp=$("#top");
+  if(tp.dataset.h!==top){tp.dataset.h=top;tp.innerHTML=top;const af=$("#avf");if(af)af.onchange=()=>{if(af.files[0])cropAvatar(af.files[0]);af.value=""}}
+  if(mine){const ch=$("#chips2"),ti=$("#f input[name=title]");
+    ch.innerHTML=Object.entries(members).filter(([k])=>k!==me).map(([k,v])=>`<button type="button" data-n="${esc(v.name)}">@${esc(v.name)}</button>`).join("");
+    ch.querySelectorAll("button").forEach(b=>b.onclick=()=>{ti.value+=(ti.value&&!/\s$/.test(ti.value)?" ":"")+"@"+b.dataset.n+" ";ti.focus()})}
+  let h=list.map(t=>taskCard(t,false)).join("")||'<p class="mu">Chưa có việc.</p>';
+  if(mine){const g=tasks.filter(t=>t.created_by===me&&t.assignee!==me&&!t.done).sort((a,b)=>key(a).localeCompare(key(b)));
+    if(g.length)h+=`<h3>Tôi đã giao (${g.length})</h3>`+g.map(t=>taskCard(t,true)).join("")}
+  $("#list").innerHTML=h;bind();
 }
 function renderChat(){
   const m=$("#main"),first=m.dataset.t!=="chat",n=chat.length,changed=first||n!==window.lastN;window.lastN=n;m.dataset.t="chat";
-  m.innerHTML=chat.map(c=>`<div class="msg ${c.sender===me?"me":""} ${c.sender!==me&&mentionsMe(c.body)?"ment":""}"><b>${esc(nm(c.sender))}</b>${tagify(c.body)}</div>`).join("")||'<p class="mu">Chưa có tin nhắn.</p>';
+  m.innerHTML=chat.map(c=>`<div class="msg ${c.sender===me?"me":""} ${c.sender!==me&&mentionsMe(c.body)?"ment":""}"><b>${av(c.sender,18)}${esc(nm(c.sender))}</b>${tagify(c.body)}</div>`).join("")||'<p class="mu">Chưa có tin nhắn.</p>';
   if(!$("#chatbar")){const b=document.createElement("form");b.id="chatbar";
     b.innerHTML='<div id="chips"></div><input type="text" maxlength="500" placeholder="Nhắn cả nhà…"><button class="pri">Gửi</button>';
     b.onsubmit=async e=>{e.preventDefault();const i=b.querySelector("input"),t=i.value.trim();if(!t)return;i.value="";
