@@ -1,5 +1,5 @@
 // Bot nhắc việc: đọc Supabase, gửi cảnh báo vào nhóm Zalo. Chạy bằng GitHub Actions (Node 20).
-const E = process.env, MODE = E.MODE || "alerts";
+const E = process.env, MODE = E.MODE || (E.SCHEDULE === "0 13 * * *" ? "summary" : "alerts");
 const need = ["SUPABASE_URL", "SUPABASE_KEY", "BOT_SECRET", "ZALO_TOKEN", ...(MODE === "getid" ? [] : ["ZALO_CHAT_ID"])];
 const miss = need.filter(k => !E[k]);
 if (miss.length) { console.error("Thiếu secret:", miss.join(", ")); process.exit(1); }
