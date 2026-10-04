@@ -19,7 +19,8 @@ jobs:
           node-version: 20
       - run: node bot/remind.mjs
         env:
-          MODE: "${{ github.event.inputs.mode || (github.event.schedule == '0 13 * * *' && 'summary' || 'alerts') }}"
+          MODE: ${{ github.event.inputs.mode }}
+          SCHEDULE: ${{ github.event.schedule }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           BOT_SECRET: ${{ secrets.BOT_SECRET }}
