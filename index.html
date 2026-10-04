@@ -53,12 +53,18 @@ async function init(){
   me=session.user.id;await load();
   if(!members[me])return joinView();
   sb.channel("fam").on("postgres_changes",{event:"*",schema:"public"},()=>{clearTimeout(timer);timer=setTimeout(async()=>{await load();render()},250)}).subscribe();
+  setInterval(poll,4000);document.addEventListener("visibilitychange",poll);
   render();
+}
+async function poll(){
+  if(document.hidden||!me||!members[me])return;
+  const sig=()=>JSON.stringify([chat.map(c=>c.id),tasks.map(t=>[t.id,t.done,t.photo]),Object.keys(members)]);
+  const b=sig();await load();if(sig()!==b)render();
 }
 async function load(){
   const[m,t,c]=await Promise.all([sb.from("members").select("*"),sb.from("tasks").select("*"),
     sb.from("chat").select("*").order("created_at",{ascending:false}).limit(100)]);
-  members={};(m.data||[]).forEach(x=>members[x.id]=x);tasks=t.data||[];chat=(c.data||[]).reverse();
+  window.loadErr=(m.error||t.error||c.error||{}).message||"";members={};(m.data||[]).forEach(x=>members[x.id]=x);tasks=t.data||[];chat=(c.data||[]).reverse();
 }
 function authView(){
   $("#tabs").innerHTML="";
@@ -78,11 +84,11 @@ function joinView(){
   $("#main").innerHTML=`<form id="j" class="card"><b style="flex:1 1 100%">Tham gia gia đình</b>
   <input type="text" name="n" placeholder="Tên của bạn (VD: Bố, Mẹ, Mai, Bin)" required maxlength="20">
   <input type="text" name="c" placeholder="Mã gia đình" required>
-  <button class="pri">Vào</button><button class="sec" type="button" id="lo">Đăng xuất</button><div class="err" id="err"></div></form>`;
+  <button class="pri">Vào</button><button class="sec" type="button" id="lo">Đăng xuất</button><div class="err" id="err">${esc(window.loadErr?"Không đọc được dữ liệu: "+window.loadErr:"")}</div></form>`;
   $("#lo").onclick=async()=>{await sb.auth.signOut();location.reload()};
   $("#j").onsubmit=async e=>{e.preventDefault();const f=e.target;
     const{error}=await sb.rpc("join_family",{p_code:f.c.value.trim(),p_name:f.n.value.trim()});
-    if(error)return $("#err").textContent=error.message;init()};
+    if(error)return $("#err").textContent=error.message;await init();if(!members[me]&&!window.loadErr)$("#err").textContent="Đã tham gia nhưng chưa đọc được danh sách (thiếu quyền đọc). Chạy fix.sql trong Supabase."};
 }
 function render(){
   $("#who").textContent="Xin chào, "+nm(me);
@@ -144,14 +150,14 @@ function renderPerson(id){
   bind();
 }
 function renderChat(){
-  const m=$("#main");m.dataset.t="chat";
+  const m=$("#main"),first=m.dataset.t!=="chat",n=chat.length,changed=first||n!==window.lastN;window.lastN=n;m.dataset.t="chat";
   m.innerHTML=chat.map(c=>`<div class="msg ${c.sender===me?"me":""}"><b>${esc(nm(c.sender))}</b>${esc(c.body)}</div>`).join("")||'<p class="mu">Chưa có tin nhắn.</p>';
   if(!$("#chatbar")){const b=document.createElement("form");b.id="chatbar";
     b.innerHTML='<input type="text" maxlength="500" placeholder="Nhắn cả nhà…"><button class="pri">Gửi</button>';
     b.onsubmit=async e=>{e.preventDefault();const i=b.querySelector("input"),t=i.value.trim();if(!t)return;i.value="";
       const{error}=await sb.from("chat").insert({body:t});if(error)alert(error.message);await load();render()};
     document.body.appendChild(b)}
-  window.scrollTo(0,document.body.scrollHeight);
+  if(changed)window.scrollTo(0,document.body.scrollHeight);
 }
 init();
 </script></body></html>
