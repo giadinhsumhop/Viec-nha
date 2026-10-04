@@ -13,7 +13,7 @@ h1{font-size:19px;margin:0}
 #tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 14px;position:sticky;top:0;background:var(--bg);z-index:2}
 #tabs button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:20px;padding:7px 14px;font-size:15px}
 #tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
-main{padding:6px 14px 90px;max-width:640px;margin:auto}
+main{padding:6px 14px 130px;max-width:640px;margin:auto}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:8px 0}
 .row{display:flex;gap:10px;align-items:flex-start}
 .row input[type=checkbox]{width:24px;height:24px;flex:none;margin-top:2px}
@@ -26,9 +26,10 @@ img.ph{max-width:100%;max-height:200px;border-radius:8px;margin-top:6px;display:
 .msg{max-width:85%;padding:8px 11px;border-radius:14px;margin:6px 0;background:var(--card);border:1px solid var(--bd);word-break:break-word}
 .msg.me{margin-left:auto;background:var(--ac);color:#fff;border-color:var(--ac)}
 .msg b{font-size:12px;display:block;opacity:.8}
-#chatbar{position:fixed;left:0;right:0;bottom:0;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));background:var(--bg);display:flex;gap:8px;border-top:1px solid var(--bd)}
+#chatbar{position:fixed;left:0;right:0;bottom:0;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));background:var(--bg);display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--bd)}
 #chatbar input{flex:1}
 label.up{display:inline-block;margin-top:6px;font-size:14px;color:var(--ac);border:1px dashed var(--ac);border-radius:8px;padding:5px 10px}
+.tag{font-weight:700;color:var(--ac);background:rgba(47,125,91,.14);border-radius:6px;padding:0 3px}.msg.me .tag{color:#fff;background:rgba(255,255,255,.25)}.msg.ment{border-left:4px solid var(--ac)}#chips{flex:1 1 100%;display:flex;gap:6px;overflow-x:auto}#chips button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:16px;padding:4px 10px;font-size:14px}
 .err{color:var(--bad);font-size:14px;width:100%}
 </style></head><body>
 <header><h1>🏠 Việc nhà</h1><span class="mu" id="who"></span></header>
@@ -101,12 +102,18 @@ function render(){
   if(tab==="all")return renderAll();
   renderPerson(tab);
 }
+const hm=x=>x?x.slice(0,5):"";
+const key=t=>(t.due||"9")+" "+(t.start_time||"99");
+const when=t=>(t.due?"hạn "+fmt(t.due):"không hạn")+(t.start_time?" · "+hm(t.start_time)+(t.end_time?"–"+hm(t.end_time):""):"");
+function isLate(t){if(t.done||!t.due)return false;const n=new Date(),hh=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0"),e=t.end_time||t.start_time;return t.due<today()||(t.due===today()&&!!e&&hm(e)<hh)}
+function tagify(b){const h=esc(b),ns=Object.values(members).map(x=>esc(x.name).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).sort((a,c)=>c.length-a.length);if(!ns.length)return h;return h.replace(new RegExp("@("+ns.join("|")+")(?![\\wÀ-ỹ])","gi"),m=>`<span class="tag">${m}</span>`)}
+const mentionsMe=b=>!!members[me]&&b.toLowerCase().includes("@"+members[me].name.toLowerCase());
 function taskCard(t,showWho){
-  const late=!t.done&&t.due&&t.due<today(),mine=t.assignee===me;
+  const late=isLate(t),mine=t.assignee===me;
   return `<div class="card ${t.done?"done":""}"><div class="row">
   <input type="checkbox" ${t.done?"checked":""} ${mine?"":"disabled"} data-done="${t.id}">
   <div style="flex:1"><div class="t">${esc(t.title)}</div>
-  <div class="mu ${late?"late":""}">${showWho?esc(nm(t.assignee))+" · ":""}${t.due?"hạn "+fmt(t.due):"không hạn"}${late?" · QUÁ HẠN":""}${t.done?" · ✅ xong":""}</div>
+  <div class="mu ${late?"late":""}">${showWho?esc(nm(t.assignee))+" · ":""}${when(t)}${late?" · QUÁ HẠN":""}${t.done?" · ✅ xong":""}</div>
   ${t.photo?`<a href="${esc(t.photo)}" target="_blank"><img class="ph" src="${esc(t.photo)}" alt="ảnh minh chứng"></a>`:""}
   ${mine&&!t.done?`<label class="up">📷 Gửi ảnh<input type="file" accept="image/*" hidden data-ph="${t.id}"></label>`:""}
   </div><button class="mu" style="border:0;background:none" data-del="${t.id}" title="Xoá">✕</button></div></div>`;
@@ -131,7 +138,7 @@ function bind(){
 }
 function renderAll(){
   const m=$("#main");m.dataset.t="all";
-  const open=tasks.filter(t=>!t.done).sort((a,b)=>(a.due||"9").localeCompare(b.due||"9"));
+  const open=tasks.filter(t=>!t.done).sort((a,b)=>key(a).localeCompare(key(b)));
   const done=tasks.filter(t=>t.done).sort((a,b)=>(b.done_at||"").localeCompare(a.done_at||"")).slice(0,5);
   m.innerHTML=`<h3>Sắp tới & chưa xong (${open.length})</h3>`+(open.map(t=>taskCard(t,true)).join("")||'<p class="mu">Không có việc nào 🎉</p>')
    +(done.length?`<h3>Mới hoàn thành</h3>`+done.map(t=>taskCard(t,true)).join(""):"");
@@ -141,22 +148,25 @@ function renderPerson(id){
   const m=$("#main");
   if(m.dataset.t!==id){m.dataset.t=id;
     m.innerHTML=`<form id="f" class="card"><input type="text" name="title" placeholder="Giao việc cho ${esc(id===me?"mình":nm(id))}…" required maxlength="120">
-    <input type="date" name="due" value="${today()}"><button class="pri">Thêm việc</button></form><div id="list"></div>`;
+    <input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">Thêm việc</button></form><div id="list"></div>`;
     $("#f").onsubmit=async e=>{e.preventDefault();const f=e.target;
-      const{error}=await sb.from("tasks").insert({title:f.title.value.trim(),due:f.due.value||null,assignee:id});
+      if(f.st.value&&f.et.value&&f.et.value<=f.st.value)return alert("Giờ kết thúc phải sau giờ bắt đầu");
+      const{error}=await sb.from("tasks").insert({title:f.title.value.trim(),due:f.due.value||null,start_time:f.st.value||null,end_time:f.et.value||null,assignee:id});
       if(error)return alert(error.message);f.title.value="";await load();render()};}
-  const list=tasks.filter(t=>t.assignee===id).sort((a,b)=>(a.done-b.done)||(a.due||"9").localeCompare(b.due||"9"));
+  const list=tasks.filter(t=>t.assignee===id).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
   $("#list").innerHTML=list.map(t=>taskCard(t,false)).join("")||'<p class="mu">Chưa có việc.</p>';
   bind();
 }
 function renderChat(){
   const m=$("#main"),first=m.dataset.t!=="chat",n=chat.length,changed=first||n!==window.lastN;window.lastN=n;m.dataset.t="chat";
-  m.innerHTML=chat.map(c=>`<div class="msg ${c.sender===me?"me":""}"><b>${esc(nm(c.sender))}</b>${esc(c.body)}</div>`).join("")||'<p class="mu">Chưa có tin nhắn.</p>';
+  m.innerHTML=chat.map(c=>`<div class="msg ${c.sender===me?"me":""} ${c.sender!==me&&mentionsMe(c.body)?"ment":""}"><b>${esc(nm(c.sender))}</b>${tagify(c.body)}</div>`).join("")||'<p class="mu">Chưa có tin nhắn.</p>';
   if(!$("#chatbar")){const b=document.createElement("form");b.id="chatbar";
-    b.innerHTML='<input type="text" maxlength="500" placeholder="Nhắn cả nhà…"><button class="pri">Gửi</button>';
+    b.innerHTML='<div id="chips"></div><input type="text" maxlength="500" placeholder="Nhắn cả nhà…"><button class="pri">Gửi</button>';
     b.onsubmit=async e=>{e.preventDefault();const i=b.querySelector("input"),t=i.value.trim();if(!t)return;i.value="";
       const{error}=await sb.from("chat").insert({body:t});if(error)alert(error.message);await load();render()};
     document.body.appendChild(b)}
+  const ch=$("#chips");ch.innerHTML=Object.entries(members).filter(([k])=>k!==me).map(([k,v])=>`<button type="button" data-n="${esc(v.name)}">@${esc(v.name)}</button>`).join("");
+  ch.querySelectorAll("button").forEach(b=>b.onclick=()=>{const i=$("#chatbar input");i.value+=(i.value&&!/\s$/.test(i.value)?" ":"")+"@"+b.dataset.n+" ";i.focus()});
   if(changed)window.scrollTo(0,document.body.scrollHeight);
 }
 init();
