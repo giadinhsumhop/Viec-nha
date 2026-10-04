@@ -19,7 +19,7 @@ async function rpc(fn, args) {
 async function zalo(method, body) {
   const r = await fetch(`${API}/${method}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || j.ok === false) throw new Error(`Zalo ${method}: ${JSON.stringify(j).slice(0, 200)}`);
+  if (!r.ok || j.ok === false) { const e = new Error(`Zalo ${method}: ${JSON.stringify(j).slice(0, 200)}`); e.code = j.error_code; throw e; }
   return j;
 }
 async function send(text) {
@@ -54,10 +54,14 @@ async function summary() {
     `\n\nCả nhà: xong ${sum("done")}/${sum("total")} việc, quá hạn ${sum("late")}.`);
 }
 async function getid() {
-  const j = await zalo("getUpdates", { timeout: 20 });
-  const found = new Map();
-  (function walk(o) { if (o && typeof o === "object") { if (o.chat && o.chat.id) found.set(o.chat.id, o.chat.chat_type || o.chat.type || "?"); Object.values(o).forEach(walk); } })(j);
-  if (!found.size) return console.log("Chưa thấy sự kiện nào. Hãy @tag bot trong nhóm rồi chạy lại ngay.");
+  const found = new Map(), end = Date.now() + 100000;
+  const walk = o => { if (o && typeof o === "object") { if (o.chat && o.chat.id) found.set(o.chat.id, o.chat.chat_type || o.chat.type || "?"); Object.values(o).forEach(walk); } };
+  console.log("Đang lắng nghe khoảng 100 giây. Hãy gửi tin @tag bot trong nhóm (hoặc nhắn riêng cho bot) NGAY BÂY GIỜ...");
+  while (Date.now() < end && !found.size) {
+    try { walk(await zalo("getUpdates", { timeout: 25 })); }
+    catch (e) { if (e.code !== 408) throw e; console.log("... chưa có tin mới, tiếp tục chờ"); }
+  }
+  if (!found.size) return console.log("Hết giờ, chưa nhận được tin nào. Kiểm tra bot đã vào nhóm chưa và tin có tag đúng bot không, rồi chạy lại.");
   for (const [id, type] of found) console.log(`chat.id = ${id}  (loại: ${type})`);
 }
 ({ alerts, summary, getid }[MODE] || (() => { throw new Error("MODE không hợp lệ: " + MODE); }))()
