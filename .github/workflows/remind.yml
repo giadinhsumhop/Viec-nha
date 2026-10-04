@@ -1,8 +1,8 @@
 name: Nhac viec Zalo
 on:
   schedule:
-    - cron: '*/15 * * * *'   # nháº¯c viá»‡c má»—i 15 phĂºt
-    - cron: '0 13 * * *'     # 20:00 giá» VN: tá»•ng káº¿t ngĂ y
+    - cron: '*/15 * * * *'   # nhắc việc mỗi 15 phút
+    - cron: '0 13 * * *'     # 20:00 giờ VN: tổng kết ngày
   workflow_dispatch:
     inputs:
       mode:
