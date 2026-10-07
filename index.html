@@ -71,7 +71,7 @@ async function poll(){
 async function load(){
   const[m,t,c]=await Promise.all([sb.from("members").select("*"),sb.from("tasks").select("*"),
     sb.from("chat").select("*").order("created_at",{ascending:false}).limit(100)]);
-  window.loadErr=(m.error||t.error||c.error||{}).message||"";members={};(m.data||[]).forEach(x=>members[x.id]=x);tasks=t.data||[];chat=(c.data||[]).reverse();
+  window.loadErr=(m.error||t.error||c.error||{}).message||"";members={};(m.data||[]).forEach(x=>members[x.id]=x);tasks=(t.data||[]).filter(x=>!(x.done&&Date.now()-new Date(x.done_at||x.created_at).getTime()>3*864e5));chat=(c.data||[]).reverse();
 }
 function authView(){
   $("#tabs").innerHTML="";
