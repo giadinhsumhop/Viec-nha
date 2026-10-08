@@ -55,10 +55,11 @@ let me,members={},tasks=[],chat=[],tab="all",timer;
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const fmt=d=>d?d.split("-").reverse().slice(0,2).join("/"):"";
 const nm=id=>(members[id]&&members[id].name)||"Ai đó";
-// ===== Giao bài Hoá học (đổi HOA nếu bạn đặt tên repo khác) =====
-const HOA="https://giadinhsumhop.github.io/Hoa-hoc/";
-const HB=["Chất – Nguyên tử – Phân tử","Hoá trị – Công thức hoá học","Phương trình hoá học","Mol – Khối lượng – Thể tích khí","Oxit","Axit","Bazơ","Muối","Kim loại","Phi kim","Hiđrocacbon","Dẫn xuất của hiđrocacbon"],HK=["Viết công thức","Cân bằng phương trình","Tính theo PTHH","Nhận biết chất","Chuỗi phản ứng"];
-const hoaOpts='<option value="">📚 Giao bài Hoá (không bắt buộc)</option>'+HB.map((n,i)=>`<option value="?bai=${i+1}">Học Hoá – Bài ${i+1}: ${n}</option>`).join("")+HK.map((n,i)=>`<option value="?kn=${"ABCDE"[i]}">Học Hoá – Kỹ năng ${"ABCDE"[i]}: ${n}</option>`).join("")+[["c","Tính toán"],["v","Hoá vô cơ"],["h","Hoá hữu cơ"],["a","Tổng hợp"]].map(([k,n])=>`<option value="?quiz=${k}&n=10">Luyện 10 câu ${n} (đạt 70%)</option>`).join("");
+// ===== Giao bài các môn (đổi địa chỉ nếu bạn đặt tên repo khác) =====
+const SUBJ=[
+{n:"Hoá",u:"https://giadinhsumhop.github.io/Hoa-hoc/",b:["Chất – Nguyên tử – Phân tử","Hoá trị – Công thức hoá học","Phương trình hoá học","Mol – Khối lượng – Thể tích khí","Oxit","Axit","Bazơ","Muối","Kim loại","Phi kim","Hiđrocacbon","Dẫn xuất của hiđrocacbon"],k:["Viết công thức","Cân bằng phương trình","Tính theo PTHH","Nhận biết chất","Chuỗi phản ứng"],t:[],q:[["c","Tính toán"],["v","Hoá vô cơ"],["h","Hoá hữu cơ"],["a","Tổng hợp"]]},
+{n:"Anh",u:"https://giadinhsumhop.github.io/Tieng-anh/",b:["Present simple & continuous","Past simple & continuous","Present perfect","Tương lai: will & be going to","So sánh","Modal verbs","Câu điều kiện & wish","Câu bị động","Câu tường thuật","Mệnh đề quan hệ","Mạo từ & lượng từ","Giới từ & mẫu động từ"],k:["Sắp xếp câu","Động từ bất quy tắc","Nghe và chọn từ"],t:["Gia đình & bạn bè","Trường học","Sở thích","Sức khoẻ & ăn uống","Du lịch","Môi trường","Công nghệ","Lễ hội & văn hoá"],q:[["g","Ngữ pháp"],["w","Từ vựng"],["a","Tổng hợp"]]}];
+const hoaOpts='<option value="">📚 Giao bài học (không bắt buộc)</option>'+SUBJ.map(s=>{const o=(q,t)=>`<option value="${s.u}${q}">${s.n} – ${t}</option>`;return s.b.map((n,i)=>o("?bai="+(i+1),`Bài ${i+1}: ${n}`)).join("")+s.t.map((n,i)=>o("?tu="+i,`Từ vựng: ${n}`)).join("")+s.k.map((n,i)=>o("?kn="+"ABCDE"[i],`Kỹ năng ${"ABCDE"[i]}: ${n}`)).join("")+s.q.map(([k,n])=>o("?quiz="+k+"&n=10",`Luyện 10 câu ${n} (đạt 70%)`)).join("")}).join("");
 
 async function init(){
   const{data:{session}}=await sb.auth.getSession();
@@ -200,7 +201,7 @@ function renderPerson(id){
       if(!p.title)return alert("Nhập nội dung việc (ngoài phần @tên)");
       if(f.st.value&&f.et.value&&f.et.value<=f.st.value)return alert("Giờ kết thúc phải sau giờ bắt đầu");
       const ids=p.ids.length?p.ids:[me];
-      const{error}=await sb.from("tasks").insert(ids.map(a=>({title:p.title,due:f.due.value||null,start_time:f.st.value||null,end_time:f.et.value||null,assignee:a,...(f.hoa.value?{link:HOA+f.hoa.value}:{})})));
+      const{error}=await sb.from("tasks").insert(ids.map(a=>({title:p.title,due:f.due.value||null,start_time:f.st.value||null,end_time:f.et.value||null,assignee:a,...(f.hoa.value?{link:f.hoa.value}:{})})));
       if(error)return alert(error.message);f.title.value="";await load();render()};
   }
   const list=tasks.filter(t=>t.assignee===id).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
