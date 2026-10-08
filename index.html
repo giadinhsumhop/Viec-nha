@@ -57,10 +57,13 @@ const fmt=d=>d?d.split("-").reverse().slice(0,2).join("/"):"";
 const nm=id=>(members[id]&&members[id].name)||"Ai đó";
 // ===== Giao bài các môn (đổi địa chỉ nếu bạn đặt tên repo khác) =====
 const SUBJ=[
-{n:"Hoá",u:"https://giadinhsumhop.github.io/Hoa-hoc/",b:["Chất – Nguyên tử – Phân tử","Hoá trị – Công thức hoá học","Phương trình hoá học","Mol – Khối lượng – Thể tích khí","Oxit","Axit","Bazơ","Muối","Kim loại","Phi kim","Hiđrocacbon","Dẫn xuất của hiđrocacbon"],k:["Viết công thức","Cân bằng phương trình","Tính theo PTHH","Nhận biết chất","Chuỗi phản ứng"],t:[],q:[["c","Tính toán"],["v","Hoá vô cơ"],["h","Hoá hữu cơ"],["a","Tổng hợp"]]},
-{n:"Anh",u:"https://giadinhsumhop.github.io/Tieng-anh/",b:["Present simple & continuous","Past simple & continuous","Present perfect","Tương lai: will & be going to","So sánh","Modal verbs","Câu điều kiện & wish","Câu bị động","Câu tường thuật","Mệnh đề quan hệ","Mạo từ & lượng từ","Giới từ & mẫu động từ"],k:["Sắp xếp câu","Động từ bất quy tắc","Nghe và chọn từ"],t:["Gia đình & bạn bè","Trường học","Sở thích","Sức khoẻ & ăn uống","Du lịch","Môi trường","Công nghệ","Lễ hội & văn hoá"],q:[["g","Ngữ pháp"],["w","Từ vựng"],["a","Tổng hợp"]]}];
-const hoaOpts='<option value="">📚 Giao bài học (không bắt buộc)</option>'+SUBJ.map(s=>{const o=(q,t)=>`<option value="${s.u}${q}">${s.n} – ${t}</option>`;return s.b.map((n,i)=>o("?bai="+(i+1),`Bài ${i+1}: ${n}`)).join("")+s.t.map((n,i)=>o("?tu="+i,`Từ vựng: ${n}`)).join("")+s.k.map((n,i)=>o("?kn="+"ABCDE"[i],`Kỹ năng ${"ABCDE"[i]}: ${n}`)).join("")+s.q.map(([k,n])=>o("?quiz="+k+"&n=10",`Luyện 10 câu ${n} (đạt 70%)`)).join("")}).join("");
+{n:"Hoá",l:"🧪 Hoá học",u:"https://giadinhsumhop.github.io/Hoa-hoc/",b:["Chất – Nguyên tử – Phân tử","Hoá trị – Công thức hoá học","Phương trình hoá học","Mol – Khối lượng – Thể tích khí","Oxit","Axit","Bazơ","Muối","Kim loại","Phi kim","Hiđrocacbon","Dẫn xuất của hiđrocacbon"],k:["Viết công thức","Cân bằng phương trình","Tính theo PTHH","Nhận biết chất","Chuỗi phản ứng"],t:[],q:[["c","Tính toán"],["v","Hoá vô cơ"],["h","Hoá hữu cơ"],["a","Tổng hợp"]]},
+{n:"Anh",l:"🗣️ Tiếng Anh",u:"https://giadinhsumhop.github.io/Tieng-anh/",b:["Present simple & continuous","Past simple & continuous","Present perfect","Tương lai: will & be going to","So sánh","Modal verbs","Câu điều kiện & wish","Câu bị động","Câu tường thuật","Mệnh đề quan hệ","Mạo từ & lượng từ","Giới từ & mẫu động từ"],k:["Sắp xếp câu","Động từ bất quy tắc","Nghe và chọn từ"],t:["Gia đình & bạn bè","Trường học","Sở thích","Sức khoẻ & ăn uống","Du lịch","Môi trường","Công nghệ","Lễ hội & văn hoá"],q:[["g","Ngữ pháp"],["w","Từ vựng"],["a","Tổng hợp"]]}];
+const subjOpts='<option value="">📚 Giao bài học (không bắt buộc): chọn môn…</option>'+SUBJ.map((s,i)=>`<option value="${i}">${s.l}</option>`).join("");
+const lessonOpts=i=>{const s=SUBJ[i],o=(q,t,x)=>`<option value="${s.u}${q}" data-t="${s.n} – ${x||t}">${t}</option>`,g=(l,a)=>a.length?`<optgroup label="${l}">${a.join("")}</optgroup>`:"";
+  return '<option value="">Chọn bài…</option>'+g("Bài học",s.b.map((n,j)=>o("?bai="+(j+1),`Bài ${j+1}: ${n}`)))+g("Từ vựng",s.t.map((n,j)=>o("?tu="+j,n,`Từ vựng: ${n}`)))+g("Kỹ năng",s.k.map((n,j)=>o("?kn="+"ABCDE"[j],`${"ABCDE"[j]}. ${n}`,`Kỹ năng ${"ABCDE"[j]}: ${n}`)))+g("Luyện tập",s.q.map(([k,n])=>o("?quiz="+k+"&n=10",`10 câu ${n} (đạt 70%)`,`Luyện 10 câu ${n} (đạt 70%)`)))};
 
+let hres={};
 async function init(){
   const{data:{session}}=await sb.auth.getSession();
   if(!session)return authView();
@@ -72,12 +75,13 @@ async function init(){
 }
 async function poll(){
   if(document.hidden||!me||!members[me])return;
-  const sig=()=>JSON.stringify([chat.map(c=>c.id),tasks.map(t=>[t.id,t.done,t.photo]),Object.values(members).map(x=>x.id+x.name+(x.avatar||""))]);
+  const sig=()=>JSON.stringify([chat.map(c=>c.id),tasks.map(t=>[t.id,t.done,t.photo]),Object.entries(hres).map(([k,a])=>k+":"+a.length),Object.values(members).map(x=>x.id+x.name+(x.avatar||""))]);
   const b=sig();await load();if(sig()!==b)render();
 }
 async function load(){
-  const[m,t,c]=await Promise.all([sb.from("members").select("*"),sb.from("tasks").select("*"),
-    sb.from("chat").select("*").order("created_at",{ascending:false}).limit(100)]);
+  const[m,t,c,r]=await Promise.all([sb.from("members").select("*"),sb.from("tasks").select("*"),
+    sb.from("chat").select("*").order("created_at",{ascending:false}).limit(100),
+    sb.from("hoa_results").select("task_id,score,total,created_at").not("task_id","is",null).order("created_at",{ascending:false}).limit(400)]);hres={};(r.data||[]).forEach(x=>(hres[x.task_id]=hres[x.task_id]||[]).push(x));
   window.loadErr=(m.error||t.error||c.error||{}).message||"";members={};(m.data||[]).forEach(x=>members[x.id]=x);tasks=(t.data||[]).filter(x=>!(x.done&&Date.now()-new Date(x.done_at||x.created_at).getTime()>3*864e5));chat=(c.data||[]).reverse();
 }
 function authView(){
@@ -121,12 +125,18 @@ const when=t=>(t.due?"hạn "+fmt(t.due):"không hạn")+(t.start_time?" · "+hm
 function isLate(t){if(t.done||!t.due)return false;const n=new Date(),hh=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0"),e=t.end_time||t.start_time;return t.due<today()||(t.due===today()&&!!e&&hm(e)<hh)}
 function tagify(b){const h=esc(b),ns=Object.values(members).map(x=>esc(x.name).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).sort((a,c)=>c.length-a.length);if(!ns.length)return h;return h.replace(new RegExp("@("+ns.join("|")+")(?![\\wÀ-ỹ])","gi"),m=>`<span class="tag">${m}</span>`)}
 const mentionsMe=b=>!!members[me]&&b.toLowerCase().includes("@"+members[me].name.toLowerCase());
+function hoaLine(t){if(!t.link)return"";const r=hres[String(t.id)]||[],q=r.filter(x=>x.total);
+  if(q.length){const b=q.reduce((a,x)=>x.score/x.total>a.score/a.total?x:a),l=q[0],ok=b.score/b.total>=.7;
+    return `<div class="mu" style="color:${ok?"#1a9b55":"#e08a00"};font-weight:600">📊 ${q.length} lần làm · tốt nhất ${b.score}/${b.total} · gần nhất ${l.score}/${l.total}</div>`}
+  if(r.length)return `<div class="mu" style="color:#1a9b55;font-weight:600">📘 Đã học</div>`;
+  return t.done?"":`<div class="mu">📚 Chưa làm</div>`}
 function taskCard(t,showWho){
   const late=isLate(t),mine=t.assignee===me;
   return `<div class="card ${t.done?"done":""}"><div class="row">
   <input type="checkbox" ${t.done?"checked":""} ${mine?"":"disabled"} data-done="${t.id}">
   <div style="flex:1"><div class="t">${esc(t.title)}</div>
   <div class="mu ${late?"late":""}">${showWho?av(t.assignee,18)+" "+esc(nm(t.assignee))+" · ":""}${when(t)}${t.created_by&&t.created_by!==t.assignee?" · giao bởi "+esc(nm(t.created_by)):""}${late?" · QUÁ HẠN":""}${t.done?" · ✅ xong":""}</div>
+  ${hoaLine(t)}
   ${t.link&&mine&&!t.done?`<a class="up" href="${esc(t.link)}&task=${t.id}">📚 Mở bài học</a>`:""}
   ${t.photo?`<a href="${esc(t.photo)}" target="_blank"><img class="ph" src="${esc(t.photo)}" alt="ảnh minh chứng"></a>`:""}
   ${mine&&!t.done?`<label class="up">📷 Gửi ảnh<input type="file" accept="image/*" hidden data-ph="${t.id}"></label>`:""}
@@ -195,8 +205,9 @@ function renderAll(){
 function renderPerson(id){
   const m=$("#main"),mine=id===me;
   if(m.dataset.t!==id){m.dataset.t=id;
-    m.innerHTML=`<div id="top"></div>`+(mine?`<form id="f" class="card"><input type="text" name="title" placeholder="Việc cần làm… (tag @tên để giao cho người khác)" required maxlength="120"><div id="chips2"></div><select name="hoa" class="hoa">${hoaOpts}</select><input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">Thêm việc</button><div class="mu">Không tag ai thì việc là của bạn.</div></form>`:"")+`<div id="list"></div>`;
-    if(mine)$("#f").hoa.onchange=e=>{const o=e.target.selectedOptions[0],ti=$("#f input[name=title]");if(o.value&&!ti.value)ti.value=o.textContent};
+    m.innerHTML=`<div id="top"></div>`+(mine?`<form id="f" class="card"><input type="text" name="title" placeholder="Việc cần làm… (tag @tên để giao cho người khác)" required maxlength="120"><div id="chips2"></div><select name="hs" class="hoa">${subjOpts}</select><select name="hoa" class="hoa" style="display:none"></select><input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">Thêm việc</button><div class="mu">Không tag ai thì việc là của bạn.</div></form>`:"")+`<div id="list"></div>`;
+    if(mine){const F=$("#f");F.hs.onchange=e=>{const i=e.target.value;F.hoa.innerHTML=i===""?"":lessonOpts(+i);F.hoa.style.display=i===""?"none":""};
+      F.hoa.onchange=e=>{const o=e.target.selectedOptions[0],ti=F.querySelector("input[name=title]");if(o.value&&(!ti.value||ti.value===ti.dataset.a))ti.value=ti.dataset.a=o.dataset.t||o.textContent}}
     if(mine)$("#f").onsubmit=async e=>{e.preventDefault();const f=e.target,p=parseTags(f.title.value);
       if(!p.title)return alert("Nhập nội dung việc (ngoài phần @tên)");
       if(f.st.value&&f.et.value&&f.et.value<=f.st.value)return alert("Giờ kết thúc phải sau giờ bắt đầu");
