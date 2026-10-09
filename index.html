@@ -39,6 +39,9 @@ label.up{display:inline-block;margin-top:6px;font-size:14px;color:var(--ac);bord
 .err{color:var(--bad);font-size:14px;width:100%}
 a.up{display:inline-block;margin-top:6px;font-size:14px;color:#fff;background:var(--ac);border-radius:8px;padding:6px 12px;text-decoration:none}
 select.hoa{flex:1 1 100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+.tb{width:100%;border-collapse:collapse;font-size:14px}.tb th,.tb td{padding:6px 4px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}.tw{overflow-x:auto}
+.g{color:#1a9b55}.o{color:#e08a00}.r{color:#d7263d}
+select.sf{font:inherit;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
 </style></head><body>
 <header><h1>🏠 Việc nhà</h1><span class="mu" id="who"></span></header>
 <div id="tabs"></div><main id="main"><p class="mu">Đang tải…</p></main>
@@ -60,7 +63,8 @@ const SUBJ=[
 {n:"Hoá",l:"🧪 Hoá học",u:"https://giadinhsumhop.github.io/Hoa-hoc/",b:["Chất – Nguyên tử – Phân tử","Hoá trị – Công thức hoá học","Phương trình hoá học","Mol – Khối lượng – Thể tích khí","Oxit","Axit","Bazơ","Muối","Kim loại","Phi kim","Hiđrocacbon","Dẫn xuất của hiđrocacbon"],k:["Viết công thức","Cân bằng phương trình","Tính theo PTHH","Nhận biết chất","Chuỗi phản ứng"],t:[],q:[["c","Tính toán"],["v","Hoá vô cơ"],["h","Hoá hữu cơ"],["a","Tổng hợp"]]},
 {n:"Anh",l:"🗣️ Tiếng Anh",u:"https://giadinhsumhop.github.io/Tieng-anh/",b:["Present simple & continuous","Past simple & continuous","Present perfect","Tương lai: will & be going to","So sánh","Modal verbs","Câu điều kiện & wish","Câu bị động","Câu tường thuật","Mệnh đề quan hệ","Mạo từ & lượng từ","Giới từ & mẫu động từ"],k:["Sắp xếp câu","Động từ bất quy tắc","Nghe và chọn từ"],t:["Gia đình & bạn bè","Trường học","Sở thích","Sức khoẻ & ăn uống","Du lịch","Môi trường","Công nghệ","Lễ hội & văn hoá"],q:[["g","Ngữ pháp"],["w","Từ vựng"],["a","Tổng hợp"]]},
 {n:"Tin",l:"💻 Tin học",tl:"Thuật ngữ",u:"https://giadinhsumhop.github.io/Tin-hoc/",b:["Thông tin và dữ liệu","Biểu diễn thông tin trong máy tính","Phần cứng và phần mềm","Mạng máy tính và Internet","An toàn thông tin và đạo đức","Phần mềm bảng tính","Biểu đồ, sắp xếp và lọc dữ liệu","Soạn thảo, trình chiếu, sơ đồ tư duy","Thuật toán và sơ đồ khối","Tìm kiếm và sắp xếp","Lập trình trực quan (Scratch)","Làm quen Python"],k:["Chuyển đổi nhị phân","Luyện hàm bảng tính","Sắp xếp nổi bọt","Tìm kiếm nhị phân"],t:["Phần cứng","Phần mềm","Mạng và Internet","Lập trình","An toàn thông tin"],q:[["k","Kiến thức"],["c","Tính toán & thuật toán"],["t","Thuật ngữ"],["a","Tổng hợp"]]},
-{n:"Lý",l:"⚡ Vật lí",u:"https://giadinhsumhop.github.io/Vat-ly/",b:["Tốc độ chuyển động","Đồ thị quãng đường – thời gian","Âm thanh","Ánh sáng và gương phẳng","Từ trường","Khối lượng riêng và áp suất","Lực đẩy Ác-si-mét","Công và công suất","Nhiệt lượng","Dòng điện và định luật Ôm","Công suất điện và an toàn điện","Khúc xạ, thấu kính và điện từ"],k:["Chuyển động đều (mô phỏng)","Mạch điện và định luật Ôm (mô phỏng)","Nổi hay chìm (mô phỏng)","Máy tính công thức","Đổi đơn vị"],t:[],q:[["l","Lý thuyết"],["c","Tính toán"],["a","Tổng hợp"]]}];
+{n:"Lý",l:"⚡ Vật lí",u:"https://giadinhsumhop.github.io/Vat-ly/",b:["Tốc độ chuyển động","Đồ thị quãng đường – thời gian","Âm thanh","Ánh sáng và gương phẳng","Từ trường","Khối lượng riêng và áp suất","Lực đẩy Ác-si-mét","Công và công suất","Nhiệt lượng","Dòng điện và định luật Ôm","Công suất điện và an toàn điện","Khúc xạ, thấu kính và điện từ"],k:["Chuyển động đều (mô phỏng)","Mạch điện và định luật Ôm (mô phỏng)","Nổi hay chìm (mô phỏng)","Máy tính công thức","Đổi đơn vị"],t:[],q:[["l","Lý thuyết"],["c","Tính toán"],["a","Tổng hợp"]]},
+{n:"Toán",l:"➗ Toán học",u:"https://giadinhsumhop.github.io/Toan-hoc/",b:["Hằng đẳng thức và phân tích đa thức","Phân thức đại số","Hàm số bậc nhất y = ax + b","Phương trình và bất phương trình bậc nhất","Định lí Pythagore và tứ giác","Định lí Thalès và tam giác đồng dạng","Thống kê và xác suất","Căn bậc hai và căn bậc ba","Hệ hai phương trình bậc nhất hai ẩn","Phương trình bậc hai và định lí Viète","Hàm số y = ax²","Hệ thức lượng trong tam giác vuông","Đường tròn","Hình trụ, hình nón, hình cầu"],k:["Giải phương trình bậc hai","Vẽ đồ thị hàm số","Giải hệ hai phương trình","Tam giác vuông","Rút gọn căn bậc hai"],t:[],q:[["l","Lý thuyết"],["c","Tính toán"],["a","Tổng hợp"]]}];
 const subjOpts='<option value="">📚 Giao bài học (không bắt buộc): chọn môn…</option>'+SUBJ.map((s,i)=>`<option value="${i}">${s.l}</option>`).join("");
 const lessonOpts=i=>{const s=SUBJ[i],o=(q,t,x)=>`<option value="${s.u}${q}" data-t="${s.n} – ${x||t}">${t}</option>`,g=(l,a)=>a.length?`<optgroup label="${l}">${a.join("")}</optgroup>`:"";
   return '<option value="">Chọn bài…</option>'+g("Bài học",s.b.map((n,j)=>o("?bai="+(j+1),`Bài ${j+1}: ${n}`)))+g(s.tl||"Từ vựng",s.t.map((n,j)=>o("?tu="+j,n,`${s.tl||"Từ vựng"}: ${n}`)))+g("Kỹ năng",s.k.map((n,j)=>o("?kn="+"ABCDE"[j],`${"ABCDE"[j]}. ${n}`,`Kỹ năng ${"ABCDE"[j]}: ${n}`)))+g("Luyện tập",s.q.map(([k,n])=>o("?quiz="+k+"&n=10",`10 câu ${n} (đạt 70%)`,`Luyện 10 câu ${n} (đạt 70%)`)))};
@@ -113,10 +117,11 @@ function joinView(){
 function render(){
   $("#who").innerHTML=av(me,24)+" "+esc(nm(me));
   const ids=Object.keys(members).sort((a,b)=>a===me?-1:b===me?1:nm(a).localeCompare(nm(b)));
-  $("#tabs").innerHTML=[["all","📋 Tổng hợp"],["chat","💬 Chat"],...ids.map(i=>[i,av(i)+esc(i===me?"Của tôi":nm(i))])]
+  $("#tabs").innerHTML=[["all","📋 Tổng hợp"],["chat","💬 Chat"],["study","📊 Kết quả Tự học"],...ids.map(i=>[i,av(i)+esc(i===me?"Của tôi":nm(i))])]
     .map(([k,l])=>`<button class="${k===tab?"on":""}" data-k="${esc(k)}">${l}</button>`).join("");
   $("#tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{tab=b.dataset.k;$("#main").dataset.t="";render();window.scrollTo(0,0)});
   const cb=$("#chatbar");if(cb&&tab!=="chat")cb.remove();
+  if(tab==="study")return renderStudy(true);
   if(tab==="chat")return renderChat();
   if(tab==="all")return renderAll();
   renderPerson(tab);
@@ -229,6 +234,33 @@ function renderPerson(id){
     if(g.length)h+=`<h3>Tôi đã giao (${g.length})</h3>`+g.map(t=>taskCard(t,true)).join("")}
   $("#list").innerHTML=h;bind();
 }
+const PFX=[["Hoá",""],["Anh","anh:"],["Tin","tin:"],["Lý","ly:"],["Toán","toan:"]];
+function subjOf(t){const p=PFX.find(([n,x])=>x&&t.startsWith(x));return p?[p[0],t.slice(p[1].length)]:["Hoá",t]}
+function topicLabel(sn,t){const s=SUBJ.find(x=>x.n===sn)||{b:[],k:[],t:[],q:[]},[k,v]=t.split("-");
+  if(k==="bai")return `Bài ${v}: ${s.b[v-1]||""}`;
+  if(k==="kn")return `${v}. ${s.k["ABCDE".indexOf(v)]||""}`;
+  if(k==="tu")return s.t[v]?`${s.tl||"Từ vựng"}: ${s.t[v]}`:"Từ vựng";
+  const q=s.q.find(x=>x[0]===v);return `Luyện ${q?q[1]:v}`}
+let sdata=null,sf={m:"",s:""};
+async function renderStudy(fresh){const m=$("#main");m.dataset.t="study";
+  if(fresh||!sdata){m.innerHTML='<p class="mu">Đang tải…</p>';
+    const r=await sb.from("hoa_results").select("user_id,task_id,topic,score,total,created_at").order("created_at",{ascending:false}).limit(1000);
+    if(tab!=="study")return;
+    if(r.error){m.innerHTML=`<p class="mu">Không tải được: ${esc(r.error.message)}. Bạn đã chạy file SQL chưa?</p>`;return}
+    sdata=(r.data||[]).map(x=>{const[sj,t]=subjOf(x.topic);return{...x,sj,lb:topicLabel(sj,t),pct:x.total?Math.round(x.score/x.total*100):null}})}
+  const ids=Object.keys(members).sort((a,b)=>nm(a).localeCompare(nm(b))),cl=p=>p>=70?"g":p>=50?"o":"r",SJ=PFX.map(x=>x[0]),
+    rows=sdata.filter(x=>(!sf.m||x.user_id===sf.m)&&(!sf.s||x.sj===sf.s)),
+    cell=(u,s)=>{const all=sdata.filter(x=>x.user_id===u&&x.sj===s),q=all.filter(x=>x.total);
+      if(!q.length)return `<td>${all.length?"📘":"–"}</td>`;
+      const b=Math.max(...q.map(x=>x.pct)),a=Math.round(q.reduce((t,x)=>t+x.pct,0)/q.length);
+      return `<td><b class="${cl(b)}">${b}%</b><br><span class="mu">TB ${a}% · ${q.length} lần</span></td>`};
+  m.innerHTML=`<h3>📊 Kết quả Tự học</h3><p class="mu">Điểm tốt nhất, điểm trung bình và số lần làm bài kiểm tra của từng bạn theo môn. 📘 = đã học bài nhưng chưa làm kiểm tra.</p>
+  <div class="tw"><table class="tb"><tr><th>Bạn</th>${SJ.map(s=>`<th>${s}</th>`).join("")}</tr>${ids.filter(i=>!sf.m||i===sf.m).map(i=>`<tr><td>${esc(nm(i))}</td>${SJ.map(s=>cell(i,s)).join("")}</tr>`).join("")}</table></div>
+  <h3>Các lần làm bài</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><select class="sf" id="sfm"><option value="">Tất cả các bạn</option>${ids.map(i=>`<option value="${esc(i)}"${sf.m===i?" selected":""}>${esc(nm(i))}</option>`).join("")}</select>
+  <select class="sf" id="sfs"><option value="">Tất cả các môn</option>${SJ.map(s=>`<option${sf.s===s?" selected":""}>${s}</option>`).join("")}</select><button class="sf" id="sfr" style="border:1px solid var(--bd);cursor:pointer">↻ Làm mới</button></div>
+  ${rows.length?`<div class="tw"><table class="tb"><tr><th>Ngày</th><th>Bạn</th><th>Môn</th><th>Nội dung</th><th>Điểm</th></tr>${rows.slice(0,80).map(x=>`<tr><td>${(d=>d.toLocaleDateString("vi-VN",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",hour12:false}))(new Date(x.created_at))}</td><td>${esc(nm(x.user_id))}</td><td>${x.sj}</td><td>${esc(x.lb)}</td><td>${x.total?`${x.score}/${x.total}<br><b class="${cl(x.pct)}">${x.pct}%</b>`:"📘"}</td></tr>`).join("")}</table></div>${rows.length>80?`<p class="mu">Hiện 80 lần gần nhất trong ${rows.length} lần.</p>`:""}`:'<p class="mu">Chưa có kết quả nào.</p>'}`;
+  $("#sfm").onchange=e=>{sf.m=e.target.value;renderStudy(false)};$("#sfs").onchange=e=>{sf.s=e.target.value;renderStudy(false)};$("#sfr").onclick=()=>renderStudy(true)}
 function renderChat(){
   const m=$("#main"),first=m.dataset.t!=="chat",n=chat.length,changed=first||n!==window.lastN;window.lastN=n;m.dataset.t="chat";
   m.innerHTML=chat.map(c=>`<div class="msg ${c.sender===me?"me":""} ${c.sender!==me&&mentionsMe(c.body)?"ment":""}"><b>${av(c.sender,18)}${esc(nm(c.sender))}</b>${tagify(c.body)}</div>`).join("")||'<p class="mu">Chưa có tin nhắn.</p>';
