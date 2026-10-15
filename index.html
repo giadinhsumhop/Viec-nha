@@ -45,6 +45,7 @@ label.up{display:inline-block;margin-top:6px;font-size:14px;color:var(--ac);bord
 .cgrid .x{color:#c0392b}.cgrid .o{color:#2f6fb5}.cgrid .last{background:rgba(255,200,0,.35)}.cgrid .win{background:rgba(47,125,91,.4)}
 .inv{background:var(--ac);color:#fff;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .pbar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin:2px 0 8px}.pbar i{display:block;height:100%;width:0;background:var(--ac);transition:width .3s}
+.pls{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.pls span{display:inline-flex;align-items:center;gap:4px;border:2px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:14px}
 .err{color:var(--bad);font-size:14px;width:100%}
 </style></head><body>
 <header><h1>🏠 Việc nhà</h1><span class="mu" id="who"></span></header>
@@ -226,9 +227,9 @@ function caroWin(b,i,p){const x0=i%CN,y0=Math.floor(i/CN);for(const[dx,dy]of CDI
 function caroScore(b,i,p){let s=0;const x0=i%CN,y0=Math.floor(i/CN);for(const[dx,dy]of CDIR){let c=1,o=0;for(const sg of[1,-1]){let x=x0+dx*sg,y=y0+dy*sg;while(x>=0&&x<CN&&y>=0&&y<CN&&b[y*CN+x]===p){c++;x+=dx*sg;y+=dy*sg}if(x>=0&&x<CN&&y>=0&&y<CN&&b[y*CN+x]===0)o++}
   s+=c>=5?1e6:c===4?(o===2?1e5:o===1?1e4:0):c===3?(o===2?1e3:o===1?100:0):c===2?(o===2?100:o===1?10:0):o}return s}
 const rng=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
-const KIND={find:"🔢 Tìm số",caro:"⭕ Cờ caro"};
+const KIND={find:"🔢 Tìm số",caro:"⭕ Cờ caro",race:"🎯 Tranh số"};
 let G={lvl:100,pace:900,stop:null,clr:null,row:null,fsKey:""};
-function leaveRoom(){if(G.stop){G.stop();G.stop=null}if(G.clr){G.clr();G.clr=null}G.row=null;G.fsKey=""}
+function leaveRoom(){if(G.stop){G.stop();G.stop=null}if(G.clr){G.clr();G.clr=null}G.row=null;G.fsKey="";G.race=null}
 function renderGame(){const m=$("#main");if(m.dataset.t==="game")return;m.dataset.t="game";gameMenu()}
 function gameMenu(){
   leaveRoom();
@@ -239,19 +240,30 @@ function gameMenu(){
 async function invCheck(){
   const el=$("#inv");if(!el||!me||!sb)return;
   const since=new Date(Date.now()-10*60000).toISOString();
-  const r=await sb.from("games").select("*").eq("invited",me).eq("status","waiting").gt("created_at",since).order("created_at",{ascending:false}).limit(1);
-  const g=r.data&&r.data[0];
+  const [r1,r2]=await Promise.all([
+    sb.from("games").select("*").eq("invited",me).eq("status","waiting").gt("created_at",since).order("created_at",{ascending:false}).limit(1),
+    sb.from("games").select("*").contains("invs",[me]).eq("status","waiting").gt("created_at",since).order("created_at",{ascending:false}).limit(1)]);
+  const g=(r1.data&&r1.data[0])||(r2.data&&r2.data[0]);
   if(!g){if(el.innerHTML){el.className="";el.innerHTML=""}el.dataset.h="";return}
   const h=`${av(g.host,26)}<span style="flex:1"><b>${esc(nm(g.host))}</b> mời bạn chơi ${KIND[g.kind]||""}</span><button class="pri" style="background:#fff;color:var(--ac)" id="iy">Chơi</button><button class="sec" style="color:#fff;border-color:#fff" id="in">Từ chối</button>`;
   if(el.dataset.h===h)return;el.dataset.h=h;el.className="inv";el.innerHTML=h;
   $("#iy").onclick=()=>joinRoom(g);
-  $("#in").onclick=async()=>{await sb.from("games").update({status:"declined"}).eq("id",g.id);el.dataset.h="";invCheck()};
+  $("#in").onclick=async()=>{
+    if(g.kind==="race")await sb.rpc("race_decline",{p_game:g.id});else await sb.from("games").update({status:"declined"}).eq("id",g.id);
+    el.dataset.h="";invCheck()};
 }
 async function joinRoom(g){
-  const r=await sb.from("games").update({guest:me,status:"playing"}).eq("id",g.id).eq("status","waiting").is("guest",null).select().maybeSingle();
+  let row;
+  if(g.kind==="race"){
+    const j=await sb.rpc("race_join",{p_game:g.id});
+    if(j.data&&j.data.ok){const f=await sb.from("games").select("*").eq("id",g.id).maybeSingle();row=f.data}
+  }else{
+    const r=await sb.from("games").update({guest:me,status:"playing"}).eq("id",g.id).eq("status","waiting").is("guest",null).select().maybeSingle();
+    row=r.data;
+  }
   $("#inv").dataset.h="";
-  if(!r.data){alert("Lời mời đã hết hạn.");return invCheck()}
-  tab="game";$("#main").dataset.t="game";render();invCheck();roomView(r.data);
+  if(!row){alert("Lời mời đã hết hạn.");return invCheck()}
+  tab="game";$("#main").dataset.t="game";render();invCheck();roomView(row);
 }
 function invitePick(kind,n,back){
   leaveRoom();const m=$("#main"),others=Object.keys(members).filter(k=>k!==me);
@@ -280,6 +292,7 @@ function roomView(row){
   const toMenu=()=>{gameMenu()};
   G.stop=watch(row.id,r=>{
     if(!r){m.innerHTML=`<div class="gcard">Phòng đã đóng.</div><button class="pri" id="ok">Về trò chơi</button>`;$("#ok").onclick=toMenu;return}
+    if(r.kind==="race")return raceShow(r);
     if(r.status==="declined"){m.innerHTML=`<div class="gcard">${esc(nm(r.invited))} chưa muốn chơi lúc này 😅</div><button class="pri" id="ok">Về trò chơi</button>`;$("#ok").onclick=async()=>{await sb.from("games").delete().eq("id",r.id);toMenu()};return}
     if(r.status==="waiting"){
       m.innerHTML=`<h3>${KIND[r.kind]}</h3><div class="gcard" style="text-align:center">Đang chờ <b>${esc(nm(r.invited))}</b> chấp nhận lời mời… ⏳<div class="mu">Lời mời hết hạn sau 10 phút</div></div><button class="sec" id="cx">Huỷ phòng</button>`;
@@ -292,9 +305,9 @@ function roomView(row){
 // ---- Tìm số
 function findView(){
   leaveRoom();const m=$("#main"),n=G.lvl;
-  m.innerHTML=`<button class="sec" id="bk">← Trò chơi</button><h3>🔢 Tìm số</h3><div class="seg">${[25,50,100].map(x=>`<button class="${x===n?"on":""}" data-l="${x}">1–${x}</button>`).join("")}</div><div class="mu">Tốc độ của máy:</div><div class="seg">${[[1300,"Dễ"],[900,"Vừa"],[600,"Nhanh"]].map(([p,l])=>`<button class="${p===G.pace?"on":""}" data-p="${p}">${l}</button>`).join("")}</div><button class="pri" id="b1" style="width:100%;margin:4px 0">▶ Chơi một mình</button><button class="pri" id="b2" style="width:100%;margin:4px 0">🤖 Đua với máy</button><button class="pri" id="b3" style="width:100%;margin:4px 0">👥 Rủ người chơi</button><h3>🏆 Xếp hạng 1–${n}</h3><div id="lb" class="mu">Đang tải…</div>`;
+  m.innerHTML=`<button class="sec" id="bk">← Trò chơi</button><h3>🔢 Tìm số</h3><div class="seg">${[25,50,100].map(x=>`<button class="${x===n?"on":""}" data-l="${x}">1–${x}</button>`).join("")}</div><div class="mu">Tốc độ của máy:</div><div class="seg">${[[1300,"Dễ"],[900,"Vừa"],[600,"Nhanh"]].map(([p,l])=>`<button class="${p===G.pace?"on":""}" data-p="${p}">${l}</button>`).join("")}</div><button class="pri" id="b1" style="width:100%;margin:4px 0">▶ Chơi một mình</button><button class="pri" id="b2" style="width:100%;margin:4px 0">🤖 Đua với máy</button><button class="pri" id="b3" style="width:100%;margin:4px 0">👥 Đua 2 người (ai xong trước)</button><button class="pri" id="b4" style="width:100%;margin:4px 0">🎯 Tranh số 2–4 người (cùng 1 bảng)</button><h3>🏆 Xếp hạng 1–${n}</h3><div id="lb" class="mu">Đang tải…</div>`;
   $("#bk").onclick=gameMenu;
-  $("#b1").onclick=()=>findPlay(n);$("#b2").onclick=()=>findPlay(n,{bot:{pace:G.pace}});$("#b3").onclick=()=>invitePick("find",n,findView);
+  $("#b1").onclick=()=>findPlay(n);$("#b2").onclick=()=>findPlay(n,{bot:{pace:G.pace}});$("#b3").onclick=()=>invitePick("find",n,findView);$("#b4").onclick=()=>racePick(n,findView);
   m.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{G.lvl=+b.dataset.l;findView()});
   m.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{G.pace=+b.dataset.p;findView()});
   sb.from("scores").select("member,ms").eq("game","find"+n).order("ms",{ascending:true}).limit(100).then(r=>{
@@ -356,6 +369,90 @@ function findPlay(n,o={}){
     $("#lb2").onclick=room?gameMenu:findView;
     if(!lost&&myMs){const r=await sb.from("scores").insert({game:"find"+n,ms:myMs}),sv=$("#sv");if(sv)sv.textContent=r.error?"Chưa lưu được điểm (chạy game.sql trong Supabase)":"Đã lưu vào bảng xếp hạng ✅"}
   }
+}
+// ---- Tranh số nhiều người (cùng 1 bảng)
+const RC=["#2f7d5b","#2f6fb5","#c0392b","#b8860b"];
+const cnt=(o,k)=>o.split(String(k)).length-1;
+function racePick(n,back){
+  leaveRoom();const m=$("#main"),others=Object.keys(members).filter(k=>k!==me),sel=new Set();
+  const draw=()=>{
+    m.innerHTML=`<button class="sec" id="bk">← Quay lại</button><h3>🎯 Tranh số 1–${n} · chọn tối đa 3 người</h3><div class="mu">Cả nhóm cùng tìm một bảng số. Ai chạm đúng số tiếp theo trước thì được số đó.</div>`+others.map(id=>`<button class="card row" style="width:100%;align-items:center;font:inherit;color:var(--tx);${sel.has(id)?"border-color:var(--ac);background:rgba(47,125,91,.15)":""}" data-id="${id}">${av(id,32)}<b style="flex:1;text-align:left">${esc(nm(id))}</b>${sel.has(id)?"✅":""}</button>`).join("")+`<button class="pri" id="go" style="width:100%;margin-top:8px" ${sel.size?"":"disabled"}>Tạo phòng (${sel.size+1} người)</button>`;
+    $("#bk").onclick=back;
+    m.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(sel.has(id))sel.delete(id);else if(sel.size<3)sel.add(id);draw()});
+    $("#go").onclick=async()=>{
+      const r=await sb.from("games").insert({kind:"race",n,seed:Math.floor(Math.random()*1e9),players:[me],invs:[...sel]}).select().single();
+      if(r.error)return alert("Chưa tạo được phòng (đã chạy online.sql và race.sql chưa?): "+r.error.message);
+      roomView(r.data);
+    };
+  };
+  draw();
+}
+function raceShow(r){
+  if(r.status==="waiting")return raceLobby(r);
+  if(r.status==="done")return raceResult(r);
+  const key=r.id+":"+r.seed;
+  if(G.fsKey!==key){G.fsKey=key;racePlay(r)}else racePaint(r);
+}
+function raceLobby(r){
+  const m=$("#main"),host=r.host===me,pl=r.players||[];
+  const chips=pl.map((id,i)=>`<span style="border-color:${RC[i]}">${av(id,20)} ${esc(nm(id))}${id===r.host?" 👑":""}</span>`).join("")+(r.invs||[]).map(id=>`<span style="opacity:.5">${av(id,20)} ${esc(nm(id))} ⏳</span>`).join("");
+  m.innerHTML=`<h3>🎯 Tranh số 1–${r.n}</h3><div class="gcard">Người chơi (${pl.length}/4):<div class="pls">${chips}</div><div class="mu">${host?"Khi đủ người, bấm Bắt đầu (cần ít nhất 2 người).":"Chờ chủ phòng bắt đầu…"}</div></div>`+(host?`<button class="pri" id="st" style="width:100%;margin:4px 0" ${pl.length>=2?"":"disabled"}>▶ Bắt đầu</button><button class="sec" id="cx" style="width:100%">Huỷ phòng</button>`:`<button class="sec" id="lv" style="width:100%">Rời phòng</button>`);
+  if(host){$("#st").onclick=()=>sb.rpc("race_start",{p_game:r.id});$("#cx").onclick=async()=>{await sb.from("games").delete().eq("id",r.id);gameMenu()}}
+  else $("#lv").onclick=async()=>{await sb.rpc("race_leave",{p_game:r.id});gameMenu()};
+}
+function racePlay(r){
+  if(G.clr){G.clr();G.clr=null}
+  const m=$("#main"),R=rng(r.seed),n=r.n,slot=(r.players||[]).indexOf(me)+1;
+  const nums=[...Array(n).keys()].map(i=>i+1);
+  for(let i=n-1;i>0;i--){const j=Math.floor(R()*(i+1));[nums[i],nums[j]]=[nums[j],nums[i]]}
+  const sty=nums.map(()=>`font-size:${15+Math.floor(R()*7)}px;transform:rotate(${Math.floor(R()*25)-12}deg)`);
+  const st=G.race={built:false,row:r,opt:new Set(),lock:0};let cd=3;
+  const cdt=setInterval(()=>{cd--;const e=$("#cd");if(cd<=0){clearInterval(cdt);build()}else if(e)e.textContent=cd},1000);
+  G.clr=()=>clearInterval(cdt);
+  m.innerHTML=`<div class="gcard" style="text-align:center"><div id="cd" style="font-size:64px;font-weight:700">3</div>Sẵn sàng… cả nhóm cùng tìm một bảng số!</div>`;
+  function build(){
+    st.built=true;
+    m.innerHTML=`<div class="fhead"><b id="tg">Tìm số 1</b><span id="mc" style="color:${RC[Math.max(slot,1)-1]};font-weight:700">Bạn: 0</span></div><div class="pls" id="pls"></div><div class="fgrid" id="fg" style="grid-template-columns:repeat(${n===25?5:10},1fr)">${nums.map((x,i)=>`<button data-n="${x}" style="${sty[i]}">${x}</button>`).join("")}</div><button class="sec" id="qt" style="margin-top:12px">Thoát</button>`;
+    $("#qt").onclick=gameMenu;$("#fg").onclick=tap;racePaint(st.row);
+  }
+  async function tap(e){
+    const b=e.target.closest("button[data-n]");if(!b||b.disabled||!slot||Date.now()<st.lock)return;
+    const x=+b.dataset.n,row=st.row;let nx=row.nxt;while(st.opt.has(nx))nx++;
+    if(x!==nx){b.classList.add("bad");setTimeout(()=>b.classList.remove("bad"),250);st.lock=Date.now()+800;return}
+    st.opt.add(x);racePaint(row);
+    const res=await sb.rpc("race_claim",{p_game:row.id,p_num:x});
+    if(!res.data||!res.data.ok){
+      st.opt.delete(x);const f=await sb.from("games").select("*").eq("id",row.id).maybeSingle();
+      racePaint(f.data||st.row);
+    }
+  }
+}
+function racePaint(r){
+  const st=G.race;if(!st||!st.built)return;st.row=r;
+  const ow=r.owners||"",pl=r.players||[],slot=pl.indexOf(me)+1;
+  [...st.opt].forEach(x=>{if(x<=ow.length)st.opt.delete(x)});
+  document.querySelectorAll("#fg button").forEach(b=>{
+    const x=+b.dataset.n;let s=x<=ow.length?+ow[x-1]:st.opt.has(x)?slot:0;
+    if(s){b.style.background=RC[s-1];b.style.color="#fff";b.style.opacity=".85";b.disabled=true}
+    else{b.style.background="";b.style.color="";b.style.opacity="";b.disabled=false}
+  });
+  let nx=r.nxt;while(st.opt.has(nx))nx++;
+  const mine=cnt(ow,slot)+st.opt.size;
+  const tg=$("#tg"),mc=$("#mc"),pls=$("#pls");
+  if(tg)tg.textContent="Tìm số "+nx;if(mc)mc.textContent="Bạn: "+mine;
+  if(pls)pls.innerHTML=pl.map((id,i)=>`<span style="border-color:${RC[i]}">${av(id,18)} ${id===me?"Bạn":esc(nm(id))}: <b>${id===me?mine:cnt(ow,i+1)}</b></span>`).join("");
+}
+function raceResult(r){
+  if(G.clr){G.clr();G.clr=null}
+  const m=$("#main"),pl=r.players||[],ow=r.owners||"";
+  const rows=pl.map((id,i)=>({id,i,c:cnt(ow,i+1)})).sort((a,b)=>b.c-a.c);
+  const top=rows.length?rows[0].c:0,win=rows.filter(x=>x.c===top);
+  m.innerHTML=`<div class="gcard" style="text-align:center"><div style="font-size:42px">🏆</div><b style="font-size:20px">${win.map(x=>esc(nm(x.id))).join(" & ")} thắng với ${top} số!</b><div class="mu">Tổng ${r.n} số</div></div>`
+    +rows.map((x,k)=>`<div class="prow"><span>${["🥇","🥈","🥉","4."][k]}</span>${av(x.id,26)}<span class="n" style="color:${RC[x.i]}">${esc(nm(x.id))}${x.id===me?" (bạn)":""}</span><b>${x.c} số</b></div>`).join("")
+    +(r.host===me?`<button class="pri" id="ag" style="width:100%;margin:10px 0 6px">Chơi lại</button>`:`<div class="mu" style="margin:10px 0">Chờ chủ phòng chơi lại…</div>`)
+    +`<button class="sec" id="lb2" style="width:100%">Về trò chơi</button>`;
+  if(r.host===me)$("#ag").onclick=()=>sb.rpc("race_reset",{p_game:r.id});
+  $("#lb2").onclick=gameMenu;
 }
 // ---- Cờ caro
 function caroView(){
