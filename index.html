@@ -233,7 +233,7 @@ function leaveRoom(){if(G.stop){G.stop();G.stop=null}if(G.clr){G.clr();G.clr=nul
 function renderGame(){const m=$("#main");if(m.dataset.t==="game")return;m.dataset.t="game";gameMenu()}
 function gameMenu(){
   leaveRoom();
-  $("#main").innerHTML=`<h3>🎮 Giải trí</h3><div class="gcard" data-g="find"><b>🔢 Tìm số</b><div class="mu">Chạm lần lượt từ 1 trở đi. Chơi một mình, đua với máy hoặc đua cùng người thân.</div></div><div class="gcard" data-g="caro"><b>⭕ Cờ caro</b><div class="mu">5 quân liên tiếp thì thắng. Chơi với máy, rủ người thân chơi online hoặc 2 người một máy.</div></div>`;
+  $("#main").innerHTML=`<h3>🎮 Giải trí <span class="mu">(bản 10/05-b)</span></h3><div class="gcard" data-g="find"><b>🔢 Tìm số</b><div class="mu">Chạm lần lượt từ 1 trở đi. Chơi một mình, đua với máy hoặc đua cùng người thân.</div></div><div class="gcard" data-g="caro"><b>⭕ Cờ caro</b><div class="mu">5 quân liên tiếp thì thắng. Chơi với máy, rủ người thân chơi online hoặc 2 người một máy.</div></div>`;
   document.querySelectorAll("[data-g]").forEach(c=>c.onclick=()=>c.dataset.g==="find"?findView():caroView());
 }
 // ---- mời / vào phòng
@@ -305,9 +305,9 @@ function roomView(row){
 // ---- Tìm số
 function findView(){
   leaveRoom();const m=$("#main"),n=G.lvl;
-  m.innerHTML=`<button class="sec" id="bk">← Trò chơi</button><h3>🔢 Tìm số</h3><div class="seg">${[25,50,100].map(x=>`<button class="${x===n?"on":""}" data-l="${x}">1–${x}</button>`).join("")}</div><div class="mu">Tốc độ của máy:</div><div class="seg">${[[1300,"Dễ"],[900,"Vừa"],[600,"Nhanh"]].map(([p,l])=>`<button class="${p===G.pace?"on":""}" data-p="${p}">${l}</button>`).join("")}</div><button class="pri" id="b1" style="width:100%;margin:4px 0">▶ Chơi một mình</button><button class="pri" id="b2" style="width:100%;margin:4px 0">🤖 Đua với máy</button><button class="pri" id="b3" style="width:100%;margin:4px 0">👥 Đua 2 người (ai xong trước)</button><button class="pri" id="b4" style="width:100%;margin:4px 0">🎯 Tranh số 2–4 người (cùng 1 bảng)</button><h3>🏆 Xếp hạng 1–${n}</h3><div id="lb" class="mu">Đang tải…</div>`;
+  m.innerHTML=`<button class="sec" id="bk">← Trò chơi</button><h3>🔢 Tìm số</h3><div class="seg">${[25,50,100].map(x=>`<button class="${x===n?"on":""}" data-l="${x}">1–${x}</button>`).join("")}</div><div class="mu">Tốc độ của máy:</div><div class="seg">${[[1300,"Dễ"],[900,"Vừa"],[600,"Nhanh"]].map(([p,l])=>`<button class="${p===G.pace?"on":""}" data-p="${p}">${l}</button>`).join("")}</div><button class="pri" id="b1" style="width:100%;margin:4px 0">▶ Chơi một mình</button><button class="pri" id="b2" style="width:100%;margin:4px 0">🤖 Đua với máy</button><button class="pri" id="b3" style="width:100%;margin:4px 0">👥 Chơi nhiều người (2–4) · cùng 1 bảng</button><h3>🏆 Xếp hạng 1–${n}</h3><div id="lb" class="mu">Đang tải…</div>`;
   $("#bk").onclick=gameMenu;
-  $("#b1").onclick=()=>findPlay(n);$("#b2").onclick=()=>findPlay(n,{bot:{pace:G.pace}});$("#b3").onclick=()=>invitePick("find",n,findView);$("#b4").onclick=()=>racePick(n,findView);
+  $("#b1").onclick=()=>findPlay(n);$("#b2").onclick=()=>findPlay(n,{bot:{pace:G.pace}});$("#b3").onclick=()=>racePick(n,findView);
   m.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{G.lvl=+b.dataset.l;findView()});
   m.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{G.pace=+b.dataset.p;findView()});
   sb.from("scores").select("member,ms").eq("game","find"+n).order("ms",{ascending:true}).limit(100).then(r=>{
@@ -395,9 +395,9 @@ function raceShow(r){
 }
 function raceLobby(r){
   const m=$("#main"),host=r.host===me,pl=r.players||[];
-  const chips=pl.map((id,i)=>`<span style="border-color:${RC[i]}">${av(id,20)} ${esc(nm(id))}${id===r.host?" 👑":""}</span>`).join("")+(r.invs||[]).map(id=>`<span style="opacity:.5">${av(id,20)} ${esc(nm(id))} ⏳</span>`).join("");
-  m.innerHTML=`<h3>🎯 Tranh số 1–${r.n}</h3><div class="gcard">Người chơi (${pl.length}/4):<div class="pls">${chips}</div><div class="mu">${host?"Khi đủ người, bấm Bắt đầu (cần ít nhất 2 người).":"Chờ chủ phòng bắt đầu…"}</div></div>`+(host?`<button class="pri" id="st" style="width:100%;margin:4px 0" ${pl.length>=2?"":"disabled"}>▶ Bắt đầu</button><button class="sec" id="cx" style="width:100%">Huỷ phòng</button>`:`<button class="sec" id="lv" style="width:100%">Rời phòng</button>`);
-  if(host){$("#st").onclick=()=>sb.rpc("race_start",{p_game:r.id});$("#cx").onclick=async()=>{await sb.from("games").delete().eq("id",r.id);gameMenu()}}
+  const chips=pl.map((id,i)=>`<span style="border-color:${RC[i]}"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${RC[i]}"></i> ${av(id,20)} ${esc(nm(id))}${id===r.host?" 👑":""}</span>`).join("")+(r.invs||[]).map(id=>`<span style="opacity:.5">${av(id,20)} ${esc(nm(id))} ⏳</span>`).join("");
+  m.innerHTML=`<h3>🎯 Tranh số 1–${r.n}</h3><div class="gcard">Người chơi (${pl.length}/4):<div class="pls">${chips}</div><div class="mu">${host?(pl.length>=2?"Đã đủ người tối thiểu. Có thể bắt đầu ngay hoặc chờ thêm người.":"Chưa ai vào phòng. Người được mời cần bấm Chơi ở thanh mời trên đầu màn hình (có thể mất tới 4 giây mới hiện). Cả hai máy phải là bản web mới nhất."):"Chờ chủ phòng bắt đầu…"}</div></div>`+(host?`<button class="pri" id="st" style="width:100%;margin:4px 0" ${pl.length>=2?"":"disabled"}>▶ Bắt đầu</button><button class="sec" id="cx" style="width:100%">Huỷ phòng</button>`:`<button class="sec" id="lv" style="width:100%">Rời phòng</button>`);
+  if(host){$("#st").onclick=async()=>{const x=await sb.rpc("race_start",{p_game:r.id});if(x.error)alert("Không bắt đầu được: "+x.error.message+" (đã chạy race.sql chưa?)");else if(x.data&&x.data.ok===false)alert("Chưa bắt đầu được: cần ít nhất 2 người đã vào phòng.")};$("#cx").onclick=async()=>{await sb.from("games").delete().eq("id",r.id);gameMenu()}}
   else $("#lv").onclick=async()=>{await sb.rpc("race_leave",{p_game:r.id});gameMenu()};
 }
 function racePlay(r){
@@ -412,7 +412,7 @@ function racePlay(r){
   m.innerHTML=`<div class="gcard" style="text-align:center"><div id="cd" style="font-size:64px;font-weight:700">3</div>Sẵn sàng… cả nhóm cùng tìm một bảng số!</div>`;
   function build(){
     st.built=true;
-    m.innerHTML=`<div class="fhead"><b id="tg">Tìm số 1</b><span id="mc" style="color:${RC[Math.max(slot,1)-1]};font-weight:700">Bạn: 0</span></div><div class="pls" id="pls"></div><div class="fgrid" id="fg" style="grid-template-columns:repeat(${n===25?5:10},1fr)">${nums.map((x,i)=>`<button data-n="${x}" style="${sty[i]}">${x}</button>`).join("")}</div><button class="sec" id="qt" style="margin-top:12px">Thoát</button>`;
+    m.innerHTML=`<div class="fhead"><b id="tg">Tìm số 1</b><span id="mc" style="color:${RC[Math.max(slot,1)-1]};font-weight:700">Bạn: 0</span></div><div class="pls" id="pls"></div><div class="mu" id="tot"></div><div class="fgrid" id="fg" style="grid-template-columns:repeat(${n===25?5:10},1fr)">${nums.map((x,i)=>`<button data-n="${x}" style="${sty[i]}">${x}</button>`).join("")}</div><button class="sec" id="qt" style="margin-top:12px">Thoát</button>`;
     $("#qt").onclick=gameMenu;$("#fg").onclick=tap;racePaint(st.row);
   }
   async function tap(e){
@@ -439,8 +439,9 @@ function racePaint(r){
   let nx=r.nxt;while(st.opt.has(nx))nx++;
   const mine=cnt(ow,slot)+st.opt.size;
   const tg=$("#tg"),mc=$("#mc"),pls=$("#pls");
+  const to=$("#tot");if(to)to.textContent=`Cả nhóm đã tìm: ${Math.min(r.n,ow.length+st.opt.size)}/${r.n} số`;
   if(tg)tg.textContent="Tìm số "+nx;if(mc)mc.textContent="Bạn: "+mine;
-  if(pls)pls.innerHTML=pl.map((id,i)=>`<span style="border-color:${RC[i]}">${av(id,18)} ${id===me?"Bạn":esc(nm(id))}: <b>${id===me?mine:cnt(ow,i+1)}</b></span>`).join("");
+  if(pls)pls.innerHTML=pl.map((id,i)=>`<span style="border-color:${RC[i]}"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${RC[i]}"></i> ${av(id,18)} ${id===me?"Bạn":esc(nm(id))}: <b>${id===me?mine:cnt(ow,i+1)}</b></span>`).join("");
 }
 function raceResult(r){
   if(G.clr){G.clr();G.clr=null}
