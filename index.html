@@ -201,13 +201,18 @@ function renderAll(){
 function renderPerson(id){
   const m=$("#main"),mine=id===me;
   if(m.dataset.t!==id){m.dataset.t=id;
-    m.innerHTML=`<div id="top"></div>`+(mine?`<form id="f" class="card"><input type="text" name="title" placeholder="Việc cần làm… (tag @tên để giao cho người khác)" required maxlength="120"><div id="chips2"></div><input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">Thêm việc</button><div class="mu">Không tag ai thì việc là của bạn.</div></form>`:"")+`<div id="list"></div>`;
-    if(mine)$("#f").onsubmit=async e=>{e.preventDefault();const f=e.target,p=parseTags(f.title.value);
-      if(!p.title)return alert("Nhập nội dung việc (ngoài phần @tên)");
-      if(f.st.value&&f.et.value&&f.et.value<=f.st.value)return alert("Giờ kết thúc phải sau giờ bắt đầu");
-      const ids=p.ids.length?p.ids:[me];
+    m.innerHTML=`<div id="top"></div><form id="f" class="card"><input type="text" name="title" placeholder="${mine?"Việc cần làm… (tag @tên để giao cho người khác)":"Giao việc cho "+esc(nm(id))+"… (VD: Học bài)"}" required maxlength="120">${mine?'<div id="chips2"></div>':""}<input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">${mine?"Thêm việc":"Giao việc"}</button><div class="mu" style="width:100%">${mine?"Không tag ai thì việc là của bạn.":"Việc sẽ hiện ở tab của "+esc(nm(id))+"."}</div><div id="fmsg" style="width:100%;font-size:14px"></div></form><div id="list"></div>`;
+    $("#f").onsubmit=async e=>{
+      e.preventDefault();const f=e.target,fm=$("#fmsg"),say=(t,bad)=>{fm.textContent=t;fm.style.color=bad?"var(--bad)":"var(--ac)"};
+      const p=parseTags(f.title.value);
+      if(!p.title)return say("Nhập nội dung việc (ngoài phần @tên).",1);
+      if(f.st.value&&f.et.value&&f.et.value<=f.st.value)return say("Giờ kết thúc phải sau giờ bắt đầu.",1);
+      const ids=mine?(p.ids.length?p.ids:[me]):[id];
+      say("Đang giao…");
       const{error}=await sb.from("tasks").insert(ids.map(a=>({title:p.title,due:f.due.value||null,start_time:f.st.value||null,end_time:f.et.value||null,assignee:a})));
-      if(error)return alert(error.message);f.title.value="";await load();render()};
+      if(error)return say("Không giao được: "+error.message+" — nếu báo thiếu cột start_time/end_time thì chạy themgio.sql, nếu báo row-level security thì chạy fix.sql trong Supabase.",1);
+      f.title.value="";say("✅ Đã giao cho "+ids.map(x=>nm(x)).join(", ")+": "+p.title);await load();render();
+    };
   }
   const list=tasks.filter(t=>t.assignee===id).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
   const top=`<div class="card row" style="align-items:center">${av(id,64)}<div style="flex:1"><b>${esc(nm(id))}</b><div class="mu">${mine?"Tab của bạn":"Việc của "+esc(nm(id))}</div></div>${mine?'<label class="up">📷 Đổi ảnh<input type="file" accept="image/*" hidden id="avf"></label>':""}</div><h3>Hôm nay</h3>`+statBox(stat(list));
@@ -217,8 +222,8 @@ function renderPerson(id){
     ch.innerHTML=Object.entries(members).filter(([k])=>k!==me).map(([k,v])=>`<button type="button" data-n="${esc(v.name)}">@${esc(v.name)}</button>`).join("");
     ch.querySelectorAll("button").forEach(b=>b.onclick=()=>{ti.value+=(ti.value&&!/\s$/.test(ti.value)?" ":"")+"@"+b.dataset.n+" ";ti.focus()})}
   let h=list.map(t=>taskCard(t,false)).join("")||'<p class="mu">Chưa có việc.</p>';
-  if(mine){const g=tasks.filter(t=>t.created_by===me&&t.assignee!==me&&!t.done).sort((a,b)=>key(a).localeCompare(key(b)));
-    if(g.length)h+=`<h3>Tôi đã giao (${g.length})</h3>`+g.map(t=>taskCard(t,true)).join("")}
+  if(mine){const g=tasks.filter(t=>t.created_by===me&&t.assignee!==me).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
+    if(g.length)h+=`<h3>Tôi đã giao (${g.filter(t=>!t.done).length} chưa xong / ${g.length})</h3>`+g.map(t=>taskCard(t,true)).join("")}
   $("#list").innerHTML=h;bind();
 }
 // ===== GIẢI TRÍ =====
@@ -233,7 +238,7 @@ function leaveRoom(){if(G.stop){G.stop();G.stop=null}if(G.clr){G.clr();G.clr=nul
 function renderGame(){const m=$("#main");if(m.dataset.t==="game")return;m.dataset.t="game";gameMenu()}
 function gameMenu(){
   leaveRoom();
-  $("#main").innerHTML=`<h3>🎮 Giải trí <span class="mu">(bản 10/05-b)</span></h3><div class="gcard" data-g="find"><b>🔢 Tìm số</b><div class="mu">Chạm lần lượt từ 1 trở đi. Chơi một mình, đua với máy hoặc đua cùng người thân.</div></div><div class="gcard" data-g="caro"><b>⭕ Cờ caro</b><div class="mu">5 quân liên tiếp thì thắng. Chơi với máy, rủ người thân chơi online hoặc 2 người một máy.</div></div>`;
+  $("#main").innerHTML=`<h3>🎮 Giải trí <span class="mu">(bản c)</span></h3><div class="gcard" data-g="find"><b>🔢 Tìm số</b><div class="mu">Chạm lần lượt từ 1 trở đi. Chơi một mình, đua với máy hoặc đua cùng người thân.</div></div><div class="gcard" data-g="caro"><b>⭕ Cờ caro</b><div class="mu">5 quân liên tiếp thì thắng. Chơi với máy, rủ người thân chơi online hoặc 2 người một máy.</div></div>`;
   document.querySelectorAll("[data-g]").forEach(c=>c.onclick=()=>c.dataset.g==="find"?findView():caroView());
 }
 // ---- mời / vào phòng
