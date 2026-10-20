@@ -267,7 +267,7 @@ function leaveRoom(){if(G.stop){G.stop();G.stop=null}if(G.clr){G.clr();G.clr=nul
 function renderGame(){const m=$("#main");if(m.dataset.t==="game")return;m.dataset.t="game";gameMenu()}
 function gameMenu(){
   leaveRoom();
-  $("#main").innerHTML=`<h3>🎮 Giải trí <span class="mu">(bản d)</span></h3><div class="gcard" data-g="find"><b>🔢 Tìm số</b><div class="mu">Chạm lần lượt từ 1 trở đi. Chơi một mình, đua với máy hoặc đua cùng người thân.</div></div><div class="gcard" data-g="caro"><b>⭕ Cờ caro</b><div class="mu">5 quân liên tiếp thì thắng. Chơi với máy, rủ người thân chơi online hoặc 2 người một máy.</div></div>`;
+  $("#main").innerHTML=`<h3>🎮 Giải trí <span class="mu">(bản f)</span></h3><div class="gcard" data-g="find"><b>🔢 Tìm số</b><div class="mu">Chạm lần lượt từ 1 trở đi. Chơi một mình, đua với máy hoặc đua cùng người thân.</div></div><div class="gcard" data-g="caro"><b>⭕ Cờ caro</b><div class="mu">5 quân liên tiếp thì thắng. Chơi với máy, rủ người thân chơi online hoặc 2 người một máy.</div></div>`;
   document.querySelectorAll("[data-g]").forEach(c=>c.onclick=()=>c.dataset.g==="find"?findView():caroView());
 }
 // ---- mời / vào phòng
