@@ -8,12 +8,12 @@
 @media (prefers-color-scheme:dark){:root{--bg:#171815;--card:#222320;--tx:#eee;--mu:#9a9a92;--ac:#4fb589;--bad:#e5645a;--bd:#34352f}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,system-ui,"Segoe UI",sans-serif}
-header{padding:12px 14px 4px;display:flex;justify-content:space-between;align-items:center}
+header.hd{display:flex;align-items:center;gap:12px;padding:14px 14px 4px;max-width:640px;margin:auto}
 h1{font-size:19px;margin:0}
-#tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 14px;position:sticky;top:0;background:var(--bg);z-index:2}
-#tabs button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:20px;padding:7px 14px;font-size:15px}
-#tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
-main{padding:6px 14px 130px;max-width:640px;margin:auto}
+#tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}#tabs:empty{display:none}
+#tabs button{flex:1;border:0;background:none;color:var(--mu);font:inherit;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0}#tabs button .i{font-size:24px;line-height:1}
+#tabs button.on{color:var(--ac);font-weight:700}
+main{padding:6px 14px calc(92px + env(safe-area-inset-bottom,0px));max-width:640px;margin:auto}body.chatmode main{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:8px 0}
 .row{display:flex;gap:10px;align-items:flex-start}
 .row input[type=checkbox]{width:24px;height:24px;flex:none;margin-top:2px}
@@ -26,12 +26,12 @@ img.ph{max-width:100%;max-height:200px;border-radius:8px;margin-top:6px;display:
 .msg{max-width:85%;padding:8px 11px;border-radius:14px;margin:6px 0;background:var(--card);border:1px solid var(--bd);word-break:break-word}
 .msg.me{margin-left:auto;background:var(--ac);color:#fff;border-color:var(--ac)}
 .msg b{font-size:12px;display:block;opacity:.8}
-#chatbar{position:fixed;left:0;right:0;bottom:0;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));background:var(--bg);display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--bd)}
+#chatbar{position:fixed;left:0;right:0;bottom:calc(62px + env(safe-area-inset-bottom,0px));padding:8px 14px;background:var(--bg);display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--bd)}
 #chatbar input{flex:1}
 label.up{display:inline-block;margin-top:6px;font-size:14px;color:var(--ac);border:1px dashed var(--ac);border-radius:8px;padding:5px 10px}
 .tag{font-weight:700;color:var(--ac);background:rgba(47,125,91,.14);border-radius:6px;padding:0 3px}.msg.me .tag{color:#fff;background:rgba(255,255,255,.25)}.msg.ment{border-left:4px solid var(--ac)}#chips,#chips2{flex:1 1 100%;display:flex;gap:6px;overflow-x:auto}#chips button,#chips2 button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:16px;padding:4px 10px;font-size:14px}
 .av{width:var(--s,26px);height:var(--s,26px);border-radius:50%;object-fit:cover;vertical-align:middle;display:inline-flex;align-items:center;justify-content:center;background:var(--ac);color:#fff;font-size:calc(var(--s,26px)*.45);font-weight:700;flex:none}
-#tabs .av{margin-right:6px;--s:22px}.msg b .av{margin-right:4px}
+.msg b .av{margin-right:4px}
 .stats{display:flex;gap:8px}.stats div{flex:1;text-align:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 4px}.stats b{display:block;font-size:22px}.stats .bad b{color:var(--bad)}
 .prow{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--bd);font-size:14px}.prow .n{flex:1}.prow em{font-style:normal;min-width:48px;text-align:center}
 #crop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff}
@@ -52,11 +52,17 @@ select.hoa{flex:1 1 100%;font:inherit;padding:10px;border-radius:10px;border:1px
 .g{color:#1a9b55}.o{color:#e08a00}.r{color:#d7263d}
 select.sf{font:inherit;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
 details.card summary{cursor:pointer;font-size:16px}details.card h4{margin:16px 0 6px;font-size:15px}details.card form{margin:4px 0}
+.dn{display:flex;gap:8px;align-items:center;margin:10px 0}.dn input{flex:1;min-width:0}.dn button{padding:10px 14px}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}.wk button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:12px;padding:6px 0;font:inherit;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:1px}.wk button b{font-size:20px}.wk button small{font-size:12px;color:var(--mu)}.wk button.ok{background:rgba(47,125,91,.18)}.wk button.sel{background:var(--ac);color:#fff;border-color:var(--ac)}.wk button.sel small{color:#fff}
+.chp{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.chp button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:20px;padding:7px 14px;font:inherit}.chp button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.ppl{display:flex;flex-wrap:wrap;gap:8px;width:100%}.ppl label{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:20px;padding:8px 14px}.ppl input{width:22px;height:22px;accent-color:var(--ac)}
+.gv{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--bd)}
 .err{color:var(--bad);font-size:14px;width:100%}
 </style></head><body>
-<header><h1>🏠 Việc nhà</h1><span class="mu" id="who"></span></header>
+<header class="hd" id="hd"><h1>🏠 Việc nhà</h1></header>
 <div id="inv"></div>
-<div id="tabs"></div><main id="main"><p class="mu">Đang tải…</p></main>
+<main id="main"><p class="mu">Đang tải…</p></main>
+<nav id="tabs"></nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <script>
 // ===== ĐIỀN 2 DÒNG NÀY (Supabase > Project Settings > API) =====
@@ -66,7 +72,8 @@ const SUPABASE_KEY="sb_publishable_-XHUDFaDuyjN3UEto0bdwQ_amS0Ym1I";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let me,members={},tasks=[],chat=[],tab="all",timer;
+let me,members={},tasks=[],chat=[],tab="mine",timer;
+let selDate=null,famSel="all";
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const fmt=d=>d?d.split("-").reverse().slice(0,2).join("/"):"";
 const nm=id=>(members[id]&&members[id].name)||"Ai đó";
@@ -129,17 +136,22 @@ function joinView(){
     const{error}=await sb.rpc("join_family",{p_code:f.c.value.trim(),p_name:f.n.value.trim()});
     if(error)return $("#err").textContent=error.message;await init();if(!members[me]&&!window.loadErr)$("#err").textContent="Đã tham gia nhưng chưa đọc được danh sách (thiếu quyền đọc). Chạy fix.sql trong Supabase."};
 }
+const VER="v1";
+const NAV=[["mine","📋","Việc của tôi"],["give","➕","Giao việc"],["chat","💬","Chat"],["game","🎮","Giải trí"],["me","👤","Hồ sơ"]];
 function render(){
-  $("#who").innerHTML=av(me,24)+" "+esc(nm(me));
-  const ids=Object.keys(members).sort((a,b)=>a===me?-1:b===me?1:nm(a).localeCompare(nm(b)));
-  $("#tabs").innerHTML=[["all","📋 Tổng hợp"],["chat","💬 Chat"],["game","🎮 Giải trí"],["study","📊 Kết quả Tự học"],...ids.map(i=>[i,av(i)+esc(i===me?"Của tôi":nm(i))])]
-    .map(([k,l])=>`<button class="${k===tab?"on":""}" data-k="${esc(k)}">${l}</button>`).join("");
-  $("#tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{if(b.dataset.k==="game"){location.href=GAME_URL;return}tab=b.dataset.k;$("#main").dataset.t="";render();window.scrollTo(0,0)});
+  if(famSel!=="all"&&!members[famSel])famSel="all";
+  const hh=`${av(me,48)}<div><b style="font-size:18px">${esc(nm(me))}</b><div class="mu">Gia đình</div></div>`,hd=$("#hd");
+  if(hd.dataset.h!==hh){hd.dataset.h=hh;hd.innerHTML=hh}
+  const nv=$("#tabs"),on=tab==="study"?"mine":tab;
+  nv.innerHTML=NAV.map(([k,i,l])=>`<button class="${k===on?"on":""}" data-k="${k}"><span class="i">${i}</span>${l}</button>`).join("");
+  nv.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(b.dataset.k==="game"){location.href=GAME_URL;return}tab=b.dataset.k;$("#main").dataset.t="";render();window.scrollTo(0,0)});
   const cb=$("#chatbar");if(cb&&tab!=="chat")cb.remove();
+  document.body.classList.toggle("chatmode",tab==="chat");
   if(tab==="study")return renderStudy($("#main").dataset.t!=="study");
   if(tab==="chat")return renderChat();
-  if(tab==="all")return renderAll();
-  renderPerson(tab);
+  if(tab==="give")return renderGive();
+  if(tab==="me")return renderMe();
+  renderMine();
 }
 const hm=x=>x?x.slice(0,5):"";
 const key=t=>(t.due||"9")+" "+(t.start_time||"99");
@@ -185,7 +197,6 @@ function bind(){
 function av(id,sz){const m=members[id]||{},st=sz?`style="--s:${sz}px"`:"";return m.avatar?`<img class="av" ${st} src="${esc(m.avatar)}" alt="">`:`<span class="av" ${st}>${esc((m.name||"?").trim().charAt(0).toUpperCase())}</span>`}
 function stat(list){const d=today(),t=list.filter(x=>x.due===d);return{n:t.length,done:t.filter(x=>x.done).length,late:t.filter(isLate).length,old:list.filter(x=>!x.done&&x.due&&x.due<d).length}}
 function statBox(s){return `<div class="stats"><div><b>${s.n}</b><span class="mu">Việc hôm nay</span></div><div><b>${s.done}</b><span class="mu">Hoàn thành</span></div><div class="bad"><b>${s.late}</b><span class="mu">Quá hạn</span></div></div>`+(s.old?`<p class="mu late">Còn tồn từ các ngày trước: ${s.old} việc</p>`:"")}
-function peopleRows(){return Object.keys(members).map(id=>{const s=stat(tasks.filter(x=>x.assignee===id));return `<div class="prow">${av(id,26)}<span class="n">${esc(nm(id))}</span><em>${s.n} việc</em><em>✅ ${s.done}</em><em class="${s.late?"late":""}">⏰ ${s.late}</em></div>`}).join("")}
 function parseTags(text){const ids=[];let t=text;Object.entries(members).sort((a,b)=>b[1].name.length-a[1].name.length).forEach(([k,v])=>{const tag=("@"+v.name).toLowerCase();let i;while((i=t.toLowerCase().indexOf(tag))>=0){if(!ids.includes(k))ids.push(k);t=t.slice(0,i)+" "+t.slice(i+tag.length)}});return{ids,title:t.replace(/\s+/g," ").trim()}}
 function cropAvatar(file){
   const img=new Image();
@@ -216,26 +227,13 @@ function cropAvatar(file){
   };
   img.src=URL.createObjectURL(file);
 }
-function renderAll(){
-  const m=$("#main");m.dataset.t="all";
-  const open=tasks.filter(t=>!t.done).sort((a,b)=>key(a).localeCompare(key(b)));
-  const done=tasks.filter(t=>t.done).sort((a,b)=>(b.done_at||"").localeCompare(a.done_at||"")).slice(0,5);
-  m.innerHTML=`<h3>Hôm nay · cả nhà</h3>`+statBox(stat(tasks))+peopleRows()+`<p class="mu">Mỗi dòng: số việc hôm nay · ✅ xong · ⏰ quá hạn</p><h3>Sắp tới & chưa xong (${open.length})</h3>`+(open.map(t=>taskCard(t,true)).join("")||'<p class="mu">Không có việc nào 🎉</p>')
-   +(done.length?`<h3>Mới hoàn thành</h3>`+done.map(t=>taskCard(t,true)).join(""):"");
-  bind();
-}
 // ===== Hồ sơ cá nhân: ngày sinh, liên kết Zalo, đổi mật khẩu =====
-const ZALO_BOT_NAME="Bot Việc nhà";   // ← sửa thành đúng tên bot Zalo của bạn
+const ZALO_BOT_NAME="Bot Gia đình nhỏ của tui";   // ← sửa thành đúng tên bot Zalo của bạn
 const ZALO_BOT_LINK="";               // ← (không bắt buộc) dán link mở bot Zalo
 const PS={code:null};
-const PROF=`<details class="card" id="prof"><summary><b>⚙️ Hồ sơ & tài khoản</b></summary>
-<div class="mu" id="pemail"></div>
-<h4>🎂 Ngày sinh</h4><form id="fb"><input type="date" name="bd"><button class="pri">Lưu</button><div id="bmsg" style="width:100%;font-size:14px"></div></form>
-<h4>💬 Liên kết Zalo (nhắn riêng)</h4><div id="zst" class="mu"></div><div id="zbox"></div><div style="display:flex;gap:8px;margin-top:6px"><button class="sec" type="button" id="zgen">Tạo mã liên kết</button><button class="sec" type="button" id="zun" style="display:none">Huỷ liên kết</button></div><div id="zmsg" style="font-size:14px"></div>
-<h4>🔑 Đổi mật khẩu</h4><form id="fp"><input type="password" name="cur" placeholder="Mật khẩu hiện tại" required autocomplete="current-password"><input type="password" name="n1" placeholder="Mật khẩu mới (từ 6 ký tự)" required minlength="6" autocomplete="new-password"><input type="password" name="n2" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password"><button class="pri">Đổi mật khẩu</button><div id="pmsg" style="width:100%;font-size:14px"></div></form></details>`;
 function bdText(id,mine){
   const b=(members[id]||{}).birthday;
-  if(!b)return mine?"Chưa nhập ngày sinh (mở “Hồ sơ & tài khoản” bên dưới)":"Việc của "+esc(nm(id));
+  if(!b)return mine?"Chưa nhập ngày sinh (nhập ở mục Thông tin bên dưới)":"Việc của "+esc(nm(id));
   const[y,m,d]=b.split("-").map(Number),n=new Date(),isB=n.getMonth()+1===m&&n.getDate()===d,
     age=n.getFullYear()-y-((n.getMonth()+1<m||(n.getMonth()+1===m&&n.getDate()<d))?1:0);
   return `🎂 ${String(d).padStart(2,"0")}/${String(m).padStart(2,"0")}/${y} · ${age} tuổi${isB?" 🎉 Hôm nay sinh nhật!":""}`+(mine?"":" · việc của "+esc(nm(id)));
@@ -248,67 +246,129 @@ function profZalo(){
   if(bx.innerHTML!==h)bx.innerHTML=h;
   $("#zgen").style.display=linked?"none":"";$("#zun").style.display=linked?"":"none";$("#zgen").textContent=PS.code?"Tạo mã mới":"Tạo mã liên kết";
 }
-function profInit(){
-  const q=s=>$("#prof "+s),set=(el,t,bad)=>{el.textContent=t;el.style.color=bad?"var(--bad)":"var(--ac)"};
-  sb.auth.getSession().then(r=>{const e=r.data&&r.data.session&&r.data.session.user.email;if(e)q("#pemail").textContent="Email đăng nhập: "+e});
-  const fb=q("#fb");fb.bd.value=(members[me]||{}).birthday||"";
-  fb.onsubmit=async e=>{e.preventDefault();const m=q("#bmsg");set(m,"Đang lưu…");
-    const r=await sb.from("members").update({birthday:fb.bd.value||null}).eq("id",me);
-    if(r.error)return set(m,"Không lưu được: "+r.error.message+" (đã chạy profile.sql chưa?)",1);
-    set(m,"✅ Đã lưu");await load();render()};
-  sb.from("zalo_codes").select("code,created_at").eq("member",me).maybeSingle().then(r=>{
-    if(r.data&&Date.now()-new Date(r.data.created_at).getTime()<864e5)PS.code=r.data.code;profZalo()});
-  q("#zgen").onclick=async()=>{const m=q("#zmsg"),A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const code=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>A[x%32]).join("");
-    const r=await sb.from("zalo_codes").upsert({member:me,code,created_at:new Date().toISOString()});
-    if(r.error)return set(m,"Không tạo được mã: "+r.error.message+" (đã chạy profile.sql chưa?)",1);
-    PS.code=code;set(m,"");profZalo()};
-  q("#zun").onclick=async()=>{if(!confirm("Huỷ liên kết Zalo? Bot sẽ ngừng nhắn riêng cho bạn."))return;
-    const r=await sb.from("members").update({zalo_chat_id:null}).eq("id",me);
-    if(r.error)return set(q("#zmsg"),r.error.message,1);
-    await sb.from("zalo_codes").delete().eq("member",me);PS.code=null;await load();render()};
-  const fp=q("#fp");
-  fp.onsubmit=async e=>{e.preventDefault();const m=q("#pmsg");
-    if(fp.n1.value.length<6)return set(m,"Mật khẩu mới cần từ 6 ký tự.",1);
-    if(fp.n1.value!==fp.n2.value)return set(m,"Hai mật khẩu mới chưa giống nhau.",1);
-    set(m,"Đang đổi…");
-    const ses=(await sb.auth.getSession()).data.session;
-    const re=await sb.auth.signInWithPassword({email:ses.user.email,password:fp.cur.value});
-    if(re.error)return set(m,"Mật khẩu hiện tại không đúng.",1);
-    const u=await sb.auth.updateUser({password:fp.n1.value});
-    if(u.error)return set(m,"Không đổi được: "+u.error.message,1);
-    fp.reset();set(m,"✅ Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.")};
+const WD=["CN","T2","T3","T4","T5","T6","T7"];
+const SD=()=>selDate||today();
+const ymd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const pd=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(s,k)=>{const d=pd(s);d.setDate(d.getDate()+k);return ymd(d)};
+const sdate=s=>{const d=pd(s);return WD[d.getDay()]+" "+String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")};
+const dlabel=s=>{const d=pd(s),w=d.getDay();return(w===0?"Chủ nhật":"Thứ "+(w+1))+", "+String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear()};
+const dayStat=(list,d)=>{const t=list.filter(x=>x.due===d);return{n:t.length,done:t.filter(x=>x.done).length,late:t.filter(isLate).length}};
+const byKey=(a,b)=>(a.done-b.done)||key(a).localeCompare(key(b));
+const ver=()=>`<div class="mu" style="text-align:center;margin:16px 0">phiên bản ${VER}</div>`;
+const sayTo=(el,t,bad)=>{el.textContent=t;el.style.color=bad?"var(--bad)":"var(--ac)"};
+
+// ---- Tab 1: Việc của tôi (theo ngày) + việc cả nhà
+function renderMine(){
+  const m=$("#main");m.dataset.t="mine";
+  const d=SD(),my=tasks.filter(t=>t.assignee===me),st=dayStat(my,d),start=addDays(d,-pd(d).getDay());
+  const wk=[...Array(7)].map((_,i)=>{const x=addDays(start,i),s=dayStat(my,x);return `<button data-d="${x}" class="${x===d?"sel":s.n&&s.done===s.n?"ok":""}">${WD[i]}<b>${+x.slice(8)}</b><small>${s.n?s.done+"/"+s.n:"–"}</small></button>`}).join("");
+  const mineList=my.filter(t=>t.due===d).sort(byKey);
+  const backlog=d===today()?my.filter(t=>!t.done&&t.due&&t.due<d).sort(byKey):[];
+  const fam=tasks.filter(t=>t.due===d),ids=Object.keys(members).sort((a,b)=>a===me?-1:b===me?1:nm(a).localeCompare(nm(b)));
+  const chips=[["all","Tất cả",fam],...ids.map(id=>[id,id===me?"Tôi":nm(id),fam.filter(t=>t.assignee===id)])].map(([k,l,a])=>`<button data-f="${k}" class="${k===famSel?"on":""}">${esc(l)} ${a.filter(t=>t.done).length}/${a.length}</button>`).join("");
+  const famList=fam.filter(t=>famSel==="all"?t.assignee!==me:t.assignee===famSel).sort(byKey);
+  m.innerHTML=`<div class="dn"><button class="sec" id="dp">‹</button><input type="date" id="dd" value="${d}"><button class="sec" id="dx">›</button><button class="sec" id="dt">Hôm nay</button></div>
+<div class="wk">${wk}</div>
+<div class="card"><b style="font-size:18px">${dlabel(d)}</b>${st.n?`<div class="mu">Hoàn thành ${st.done}/${st.n}${st.late?` · <span class="late">quá hạn ${st.late}</span>`:""}</div>`:`<p class="mu" style="margin:6px 0 0">Không có việc nào trong ngày này 🎉</p>`}</div>
+${mineList.map(t=>taskCard(t,false)).join("")}
+${backlog.length?`<h3>⚠️ Còn tồn từ các ngày trước (${backlog.length})</h3>`+backlog.map(t=>taskCard(t,false)).join(""):""}
+<div class="card"><b style="font-size:18px">👨‍👩‍👧 Việc cả nhà · ${sdate(d)}</b><div class="chp">${chips}</div>${famList.length?"":`<p class="mu" style="margin:0">${famSel==="all"?"Những người khác không có việc nào trong ngày này.":esc(nm(famSel))+" không có việc nào trong ngày này."}</p>`}<div class="mu">Bấm tên một người để xem riêng việc của người đó.</div></div>
+${famList.map(t=>taskCard(t,true)).join("")}
+<button class="sec" id="sty" style="width:100%;margin-top:10px">📊 Kết quả Tự học</button>${ver()}`;
+  const go=x=>{selDate=x;render()};
+  $("#dp").onclick=()=>go(addDays(d,-1));$("#dx").onclick=()=>go(addDays(d,1));$("#dt").onclick=()=>go(null);
+  $("#dd").onchange=e=>go(e.target.value||null);
+  m.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>go(b.dataset.d));
+  m.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{famSel=b.dataset.f;render()});
+  $("#sty").onclick=()=>{tab="study";m.dataset.t="";render();window.scrollTo(0,0)};
+  bind();
 }
-function renderPerson(id){
-  const m=$("#main"),mine=id===me;
-  if(m.dataset.t!==id){m.dataset.t=id;
-    m.innerHTML=`<div id="top"></div>${mine?PROF:""}<form id="f" class="card"><input type="text" name="title" placeholder="${mine?"Việc cần làm… (tag @tên để giao cho người khác)":"Giao việc cho "+esc(nm(id))+"… (VD: Học bài)"}" required maxlength="120">${mine?'<div id="chips2"></div>':""}<select name="hs" class="hoa">${subjOpts}</select><select name="hoa" class="hoa" style="display:none"></select><input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">${mine?"Thêm việc":"Giao việc"}</button><div class="mu" style="width:100%">${mine?"Không tag ai thì việc là của bạn.":"Việc sẽ hiện ở tab của "+esc(nm(id))+"."}</div><div id="fmsg" style="width:100%;font-size:14px"></div></form><div id="list"></div>`;
-    if(mine)profInit();
-    {const F=$("#f");F.hs.onchange=e=>{const i=e.target.value;F.hoa.innerHTML=i===""?"":lessonOpts(+i);F.hoa.style.display=i===""?"none":""};
-      F.hoa.onchange=e=>{const o=e.target.selectedOptions[0],ti=F.querySelector("input[name=title]");if(o.value&&(!ti.value||ti.value===ti.dataset.a))ti.value=ti.dataset.a=o.dataset.t||o.textContent}}
-    $("#f").onsubmit=async e=>{
-      e.preventDefault();const f=e.target,fm=$("#fmsg"),say=(t,bad)=>{fm.textContent=t;fm.style.color=bad?"var(--bad)":"var(--ac)"};
-      const p=parseTags(f.title.value);
-      if(!p.title)return say("Nhập nội dung việc (ngoài phần @tên).",1);
-      if(f.st.value&&f.et.value&&f.et.value<=f.st.value)return say("Giờ kết thúc phải sau giờ bắt đầu.",1);
-      const ids=mine?(p.ids.length?p.ids:[me]):[id];
+
+// ---- Tab 2: Giao việc
+function renderGive(){
+  const m=$("#main"),first=m.dataset.t!=="give";m.dataset.t="give";
+  if(first){
+    const ids=Object.keys(members).sort((a,b)=>a===me?-1:b===me?1:nm(a).localeCompare(nm(b)));
+    m.innerHTML=`<form id="f" class="card"><b style="font-size:18px;width:100%">Giao việc mới</b>
+<input type="text" name="title" placeholder="Việc cần làm" required maxlength="120">
+<select name="hs" class="hoa">${subjOpts}</select><select name="hoa" class="hoa" style="display:none"></select>
+<div class="mu" style="width:100%">Ngày</div><input type="date" name="due" value="${today()}" style="flex:1 1 100%">
+<div class="mu" style="width:100%">Giờ từ – đến (không bắt buộc)</div><input type="time" name="st" style="flex:1 1 40%"><input type="time" name="et" style="flex:1 1 40%">
+<div class="mu" style="width:100%">Giao cho:</div><div class="ppl" id="ppl">${ids.map(id=>`<label><input type="checkbox" value="${id}" ${id===me?"checked":""}>${av(id,22)} ${esc(id===me?nm(id)+" (tôi)":nm(id))}</label>`).join("")}</div>
+<div class="mu" style="width:100%">Lặp lại:</div><select name="rep" class="hoa"><option value="">Không lặp</option><option value="d7">Hằng ngày (7 ngày liền)</option><option value="w4">Hằng tuần (4 tuần liền)</option></select>
+<button class="pri" style="width:100%">Giao việc</button><div id="fmsg" style="width:100%;font-size:14px"></div></form>
+<div class="card"><b style="font-size:18px">Việc tôi đã giao</b><div id="glist"></div></div>${ver()}`;
+    const F=$("#f");
+    F.hs.onchange=e=>{const i=e.target.value;F.hoa.innerHTML=i===""?"":lessonOpts(+i);F.hoa.style.display=i===""?"none":""};
+    F.hoa.onchange=e=>{const o=e.target.selectedOptions[0],ti=F.title;if(o.value&&(!ti.value||ti.value===ti.dataset.a))ti.value=ti.dataset.a=o.dataset.t||o.textContent};
+    F.onsubmit=async e=>{
+      e.preventDefault();const fm=$("#fmsg"),say=(t,bad)=>sayTo(fm,t,bad);
+      const title=F.title.value.trim(),ids=[...F.querySelectorAll("#ppl input:checked")].map(x=>x.value);
+      if(!title)return say("Nhập nội dung việc.",1);
+      if(!ids.length)return say("Chọn ít nhất một người để giao.",1);
+      if(F.st.value&&F.et.value&&F.et.value<=F.st.value)return say("Giờ kết thúc phải sau giờ bắt đầu.",1);
+      const base=F.due.value||null,rp=F.rep.value,n=rp==="d7"?7:rp==="w4"?4:1,step=rp==="w4"?7:1;
+      if(n>1&&!base)return say("Chọn ngày bắt đầu để lặp lại.",1);
+      const dates=[...Array(n)].map((_,i)=>n>1?addDays(base,i*step):base);
+      const rows=ids.flatMap(a=>dates.map(dd=>({title,due:dd,start_time:F.st.value||null,end_time:F.et.value||null,assignee:a,...(F.hoa.value?{link:F.hoa.value}:{})})));
       say("Đang giao…");
-      const{error}=await sb.from("tasks").insert(ids.map(a=>({title:p.title,due:f.due.value||null,start_time:f.st.value||null,end_time:f.et.value||null,assignee:a,...(f.hoa.value?{link:f.hoa.value}:{})})));
-      if(error)return say("Không giao được: "+error.message+" — nếu báo thiếu cột start_time/end_time thì chạy themgio.sql, nếu báo row-level security thì chạy fix.sql trong Supabase.",1);
-      f.title.value="";f.title.dataset.a="";f.hs.value="";f.hoa.innerHTML="";f.hoa.style.display="none";say("✅ Đã giao cho "+ids.map(x=>nm(x)).join(", ")+": "+p.title);await load();render();
+      const{error}=await sb.from("tasks").insert(rows);
+      if(error)return say("Không giao được: "+error.message+" — nếu báo thiếu cột start_time/end_time/link thì chạy themgio.sql hoặc thêm cột link, nếu báo row-level security thì chạy fix.sql trong Supabase.",1);
+      F.title.value="";F.title.dataset.a="";F.hs.value="";F.hoa.innerHTML="";F.hoa.style.display="none";F.rep.value="";
+      say("✅ Đã giao cho "+ids.map(x=>nm(x)).join(", ")+": "+title+(n>1?` (${n} lần)`:""));await load();render();
     };
   }
-  const list=tasks.filter(t=>t.assignee===id).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
-  const top=`<div class="card row" style="align-items:center">${av(id,64)}<div style="flex:1"><b>${esc(nm(id))}</b><div class="mu">${bdText(id,mine)}</div></div>${mine?'<label class="up">📷 Đổi ảnh<input type="file" accept="image/*" hidden id="avf"></label>':""}</div><h3>Hôm nay</h3>`+statBox(stat(list));
-  const tp=$("#top");
-  if(tp.dataset.h!==top){tp.dataset.h=top;tp.innerHTML=top;const af=$("#avf");if(af)af.onchange=()=>{if(af.files[0])cropAvatar(af.files[0]);af.value=""}}
-  if(mine){const ch=$("#chips2"),ti=$("#f input[name=title]");
-    ch.innerHTML=Object.entries(members).filter(([k])=>k!==me).map(([k,v])=>`<button type="button" data-n="${esc(v.name)}">@${esc(v.name)}</button>`).join("");
-    ch.querySelectorAll("button").forEach(b=>b.onclick=()=>{ti.value+=(ti.value&&!/\s$/.test(ti.value)?" ":"")+"@"+b.dataset.n+" ";ti.focus()})}
-  let h=list.map(t=>taskCard(t,false)).join("")||'<p class="mu">Chưa có việc.</p>';
-  if(mine){const g=tasks.filter(t=>t.created_by===me&&t.assignee!==me).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
-    if(g.length)h+=`<h3>Tôi đã giao (${g.filter(t=>!t.done).length} chưa xong / ${g.length})</h3>`+g.map(t=>taskCard(t,true)).join("")}
-  $("#list").innerHTML=h;if(mine)profZalo();bind();
+  const given=tasks.filter(t=>t.created_by===me).sort((a,b)=>(b.due||"").localeCompare(a.due||"")||(b.start_time||"").localeCompare(a.start_time||"")).slice(0,40);
+  $("#glist").innerHTML=given.map(t=>`<div class="gv"><div><b>${esc(t.title)}</b><div class="mu">→ ${esc(nm(t.assignee))}${t.due?" · "+sdate(t.due):""}${t.start_time?" · "+hm(t.start_time):""}</div></div><div style="text-align:right;white-space:nowrap">${t.done?'<span style="color:var(--ac)">✓ Xong</span>':isLate(t)?'<span class="late">Quá hạn</span>':'<span class="mu">Chưa xong</span>'}<button class="mu" style="border:0;background:none" data-del="${t.id}" title="Xoá">✕</button></div></div>`).join("")||'<p class="mu">Bạn chưa giao việc nào.</p>';
+  bind();
+}
+
+// ---- Tab 5: Hồ sơ
+function renderMe(){
+  const m=$("#main"),first=m.dataset.t!=="me";m.dataset.t="me";
+  if(first){
+    m.innerHTML=`<div id="mecard"></div>
+<div class="card"><b style="font-size:18px">💬 Liên kết Zalo</b><div id="zst" class="mu" style="margin:6px 0"></div><div id="zbox"></div><div style="display:flex;gap:8px;margin-top:8px"><button class="sec" type="button" id="zgen" style="flex:1">Tạo mã liên kết</button><button class="sec" type="button" id="zun" style="flex:1;display:none">Hủy liên kết Zalo</button></div><div id="zmsg" style="font-size:14px;margin-top:6px"></div></div>
+<form id="fi" class="card"><b style="font-size:18px;width:100%">Thông tin</b><div class="mu" id="pemail" style="width:100%"></div><div class="mu" style="width:100%">Tên hiển thị</div><input type="text" name="nm" maxlength="20" required><div class="mu" style="width:100%">Ngày sinh</div><input type="date" name="bd" style="flex:1 1 100%"><button class="pri" style="width:100%">Lưu thông tin</button><div id="imsg" style="width:100%;font-size:14px"></div></form>
+<form id="fp" class="card"><b style="font-size:18px;width:100%">Đổi mật khẩu</b><input type="password" name="n1" placeholder="Mật khẩu mới (từ 6 ký tự)" required minlength="6" autocomplete="new-password"><input type="password" name="n2" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password"><button class="pri" style="width:100%">Cập nhật mật khẩu</button><div id="pmsg" style="width:100%;font-size:14px"></div></form>
+<button class="sec" id="lo" style="width:100%">Đăng xuất</button>${ver()}`;
+    meInit();
+  }
+  const top=`<div class="card row" style="align-items:center">${av(me,64)}<div style="flex:1"><b style="font-size:18px">${esc(nm(me))}</b><div class="mu">${bdText(me,true)}</div></div><label class="up">📷 Đổi ảnh<input type="file" accept="image/*" hidden id="avf"></label></div>`;
+  const mc=$("#mecard");
+  if(mc.dataset.h!==top){mc.dataset.h=top;mc.innerHTML=top;const af=$("#avf");af.onchange=()=>{if(af.files[0])cropAvatar(af.files[0]);af.value=""}}
+  profZalo();
+}
+function meInit(){
+  sb.auth.getSession().then(r=>{const e=r.data&&r.data.session&&r.data.session.user.email;if(e&&$("#pemail"))$("#pemail").textContent="Email đăng nhập: "+e});
+  const fi=$("#fi");fi.nm.value=nm(me)==="Ai đó"?"":nm(me);fi.bd.value=(members[me]||{}).birthday||"";
+  fi.onsubmit=async e=>{e.preventDefault();const m=$("#imsg"),name=fi.nm.value.trim();
+    if(!name)return sayTo(m,"Nhập tên hiển thị.",1);
+    sayTo(m,"Đang lưu…");
+    const r=await sb.from("members").update({name,birthday:fi.bd.value||null}).eq("id",me);
+    if(r.error)return sayTo(m,"Không lưu được: "+r.error.message+" (đã chạy profile.sql chưa?)",1);
+    sayTo(m,"✅ Đã lưu");await load();render()};
+  sb.from("zalo_codes").select("code,created_at").eq("member",me).maybeSingle().then(r=>{
+    if(r.data&&Date.now()-new Date(r.data.created_at).getTime()<864e5)PS.code=r.data.code;profZalo()});
+  $("#zgen").onclick=async()=>{const m=$("#zmsg"),A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const code=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>A[x%32]).join("");
+    const r=await sb.from("zalo_codes").upsert({member:me,code,created_at:new Date().toISOString()});
+    if(r.error)return sayTo(m,"Không tạo được mã: "+r.error.message+" (đã chạy profile.sql chưa?)",1);
+    PS.code=code;sayTo(m,"");profZalo()};
+  $("#zun").onclick=async()=>{if(!confirm("Hủy liên kết Zalo? Bot sẽ ngừng nhắn riêng cho bạn."))return;
+    const r=await sb.from("members").update({zalo_chat_id:null}).eq("id",me);
+    if(r.error)return sayTo($("#zmsg"),r.error.message,1);
+    await sb.from("zalo_codes").delete().eq("member",me);PS.code=null;await load();render()};
+  const fp=$("#fp");
+  fp.onsubmit=async e=>{e.preventDefault();const m=$("#pmsg");
+    if(fp.n1.value.length<6)return sayTo(m,"Mật khẩu mới cần từ 6 ký tự.",1);
+    if(fp.n1.value!==fp.n2.value)return sayTo(m,"Hai mật khẩu chưa giống nhau.",1);
+    sayTo(m,"Đang cập nhật…");
+    const u=await sb.auth.updateUser({password:fp.n1.value});
+    if(u.error)return sayTo(m,"Không đổi được: "+u.error.message+(/recent|reauth|log/i.test(u.error.message)?" — hãy đăng xuất, đăng nhập lại rồi thử lại.":""),1);
+    fp.reset();sayTo(m,"✅ Đã đổi mật khẩu.")};
+  $("#lo").onclick=async()=>{await sb.auth.signOut();location.reload()};
 }
 // ===== Game đã tách sang trang riêng (repo tro-choi) =====
 const GAME_URL="https://giadinhsumhop.github.io/tro-choi/";
