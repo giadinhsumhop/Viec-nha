@@ -45,6 +45,7 @@ const myLine = t => `• ${t.title}` + (t.start_time ? ` (${hm(t.start_time)}${t
   (t.by_name && t.by_name !== t.who ? ` — giao bởi ${t.by_name}` : "");
 
 async function alerts() {
+  try { await pollLinks(); } catch (e) { console.log("Bỏ qua pollLinks:", e.message.slice(0, 100)); }
   if (!E.FORCE && (vnHour >= 22 || vnHour < 6)) return console.log("Ngoài giờ nhắc (22h–6h), bỏ qua.");
   const rows = await rpc("bot_pending", { p_secret: E.BOT_SECRET });
   if (!rows.length) return console.log("Không có gì cần nhắc.");
@@ -98,6 +99,25 @@ const collect = (j, out, seen) => (function walk(o) {
   }
   Object.values(o).forEach(walk);
 })(j);
+const CODE = /\bLK\s*[:\-]?\s*([A-Z0-9]{4,10})\b/i;
+// Xử lý tin nhắn riêng có mã liên kết "LK ABC123" (mã tạo trong web: Của tôi > Hồ sơ & tài khoản).
+async function handleCode(m) {
+  const chat = String(m.chat.id), c = (m.text || "").match(CODE);
+  if (!c) { await dmTo(chat, "?", "Để liên kết, hãy nhắn: LK + mã (lấy mã trong web Việc nhà > Của tôi > Hồ sơ & tài khoản) 🙂"); return; }
+  const name = await rpc("bot_link_code", { p_secret: E.BOT_SECRET, p_code: c[1].toUpperCase(), p_chat: chat });
+  if (name) { console.log(`✅ Liên kết bằng mã: ${name}`); await dmTo(chat, name, `✅ Xong! Mình nhớ bạn là ${name} rồi. Từ giờ mình sẽ nhắn riêng khi bạn có việc sắp tới giờ, quá hạn và gửi tổng kết cuối ngày nhé 😊`); }
+  else { console.log("Có một mã liên kết không đúng hoặc đã hết hạn."); await dmTo(chat, "?", "Mã không đúng hoặc đã hết hạn 🤔 Hãy tạo mã mới trong web rồi nhắn lại: LK + mã."); }
+}
+// Nhặt nhanh các tin nhắn riêng đang chờ (mỗi lượt chạy), để liên kết hoạt động mà không cần chạy tay.
+async function pollLinks() {
+  const seen = new Set();
+  for (let i = 0; i < 6; i++) {
+    let j; try { j = await zalo("getUpdates", { timeout: 2 }); } catch (e) { if (e.code === 408) break; throw e; }
+    const msgs = []; collect(j, msgs, seen);
+    if (!msgs.length) break;
+    for (const m of msgs) { if (m.chat.chat_type === "GROUP" || String(m.chat.id).startsWith("zgr")) continue; await handleCode(m); }
+  }
+}
 async function getid() {
   const found = new Map(), end = Date.now() + 100000;
   const walk = o => { if (o && typeof o === "object") { if (o.chat && o.chat.id) found.set(o.chat.id, o.chat.chat_type || o.chat.type || "?"); Object.values(o).forEach(walk); } };
@@ -119,6 +139,7 @@ async function link() {
     const msgs = []; collect(j, msgs, seen);
     for (const m of msgs) {
       if (m.chat.chat_type === "GROUP" || String(m.chat.id).startsWith("zgr")) continue;
+      if (CODE.test(m.text || "")) { await handleCode(m); continue; }
       const t = " " + norm(m.text) + " ";
       const hit = members.find(x => t === " " + norm(x.name) + " ") || members.find(x => t.includes(" " + norm(x.name) + " "));
       if (!hit) { console.log("Có một tin nhắn riêng chưa khớp tên thành viên nào."); await dmTo(String(m.chat.id), "?", "Mình chưa biết bạn là ai 🤔 Hãy nhắn đúng tên bạn đã đăng ký trên web việc nhà nhé (VD: " + members.map(x => x.name).join(", ") + ")."); continue; }
