@@ -51,6 +51,7 @@ select.hoa{flex:1 1 100%;font:inherit;padding:10px;border-radius:10px;border:1px
 .tb{width:100%;border-collapse:collapse;font-size:14px}.tb th,.tb td{padding:6px 4px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}.tw{overflow-x:auto}
 .g{color:#1a9b55}.o{color:#e08a00}.r{color:#d7263d}
 select.sf{font:inherit;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+details.card summary{cursor:pointer;font-size:16px}details.card h4{margin:16px 0 6px;font-size:15px}details.card form{margin:4px 0}
 .err{color:var(--bad);font-size:14px;width:100%}
 </style></head><body>
 <header><h1>🏠 Việc nhà</h1><span class="mu" id="who"></span></header>
@@ -223,10 +224,66 @@ function renderAll(){
    +(done.length?`<h3>Mới hoàn thành</h3>`+done.map(t=>taskCard(t,true)).join(""):"");
   bind();
 }
+// ===== Hồ sơ cá nhân: ngày sinh, liên kết Zalo, đổi mật khẩu =====
+const ZALO_BOT_NAME="Bot Việc nhà";   // ← sửa thành đúng tên bot Zalo của bạn
+const ZALO_BOT_LINK="";               // ← (không bắt buộc) dán link mở bot Zalo
+const PS={code:null};
+const PROF=`<details class="card" id="prof"><summary><b>⚙️ Hồ sơ & tài khoản</b></summary>
+<div class="mu" id="pemail"></div>
+<h4>🎂 Ngày sinh</h4><form id="fb"><input type="date" name="bd"><button class="pri">Lưu</button><div id="bmsg" style="width:100%;font-size:14px"></div></form>
+<h4>💬 Liên kết Zalo (nhắn riêng)</h4><div id="zst" class="mu"></div><div id="zbox"></div><div style="display:flex;gap:8px;margin-top:6px"><button class="sec" type="button" id="zgen">Tạo mã liên kết</button><button class="sec" type="button" id="zun" style="display:none">Huỷ liên kết</button></div><div id="zmsg" style="font-size:14px"></div>
+<h4>🔑 Đổi mật khẩu</h4><form id="fp"><input type="password" name="cur" placeholder="Mật khẩu hiện tại" required autocomplete="current-password"><input type="password" name="n1" placeholder="Mật khẩu mới (từ 6 ký tự)" required minlength="6" autocomplete="new-password"><input type="password" name="n2" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password"><button class="pri">Đổi mật khẩu</button><div id="pmsg" style="width:100%;font-size:14px"></div></form></details>`;
+function bdText(id,mine){
+  const b=(members[id]||{}).birthday;
+  if(!b)return mine?"Chưa nhập ngày sinh (mở “Hồ sơ & tài khoản” bên dưới)":"Việc của "+esc(nm(id));
+  const[y,m,d]=b.split("-").map(Number),n=new Date(),isB=n.getMonth()+1===m&&n.getDate()===d,
+    age=n.getFullYear()-y-((n.getMonth()+1<m||(n.getMonth()+1===m&&n.getDate()<d))?1:0);
+  return `🎂 ${String(d).padStart(2,"0")}/${String(m).padStart(2,"0")}/${y} · ${age} tuổi${isB?" 🎉 Hôm nay sinh nhật!":""}`+(mine?"":" · việc của "+esc(nm(id)));
+}
+function profZalo(){
+  const st=$("#zst"),bx=$("#zbox");if(!st)return;
+  const z=members[me]||{},linked=!!z.zalo_chat_id;
+  st.innerHTML=linked?"✅ <b>Đã liên kết</b>. Bot sẽ nhắn riêng cho bạn khi có việc sắp tới giờ, quá hạn và gửi tổng kết cuối ngày.":("zalo_chat_id" in z?"⚪ Chưa liên kết.":"⚠️ Chưa bật tính năng (cần chạy botdm.sql và profile.sql trong Supabase).");
+  const h=(!linked&&PS.code)?`<div class="mu" style="margin-top:6px">Mã của bạn: <b style="font-size:20px;letter-spacing:2px;color:var(--tx)">${esc(PS.code)}</b><br>1. Mở Zalo, tìm <b>${esc(ZALO_BOT_NAME)}</b>${ZALO_BOT_LINK?` (<a href="${esc(ZALO_BOT_LINK)}" target="_blank" style="color:var(--ac)">mở bot</a>)`:""}.<br>2. Nhắn <b>riêng</b> cho bot: <b>LK ${esc(PS.code)}</b><br>3. Chờ tối đa khoảng 15 phút, bot sẽ nhắn xác nhận. Mã dùng được trong 24 giờ.</div>`:"";
+  if(bx.innerHTML!==h)bx.innerHTML=h;
+  $("#zgen").style.display=linked?"none":"";$("#zun").style.display=linked?"":"none";$("#zgen").textContent=PS.code?"Tạo mã mới":"Tạo mã liên kết";
+}
+function profInit(){
+  const q=s=>$("#prof "+s),set=(el,t,bad)=>{el.textContent=t;el.style.color=bad?"var(--bad)":"var(--ac)"};
+  sb.auth.getSession().then(r=>{const e=r.data&&r.data.session&&r.data.session.user.email;if(e)q("#pemail").textContent="Email đăng nhập: "+e});
+  const fb=q("#fb");fb.bd.value=(members[me]||{}).birthday||"";
+  fb.onsubmit=async e=>{e.preventDefault();const m=q("#bmsg");set(m,"Đang lưu…");
+    const r=await sb.from("members").update({birthday:fb.bd.value||null}).eq("id",me);
+    if(r.error)return set(m,"Không lưu được: "+r.error.message+" (đã chạy profile.sql chưa?)",1);
+    set(m,"✅ Đã lưu");await load();render()};
+  sb.from("zalo_codes").select("code,created_at").eq("member",me).maybeSingle().then(r=>{
+    if(r.data&&Date.now()-new Date(r.data.created_at).getTime()<864e5)PS.code=r.data.code;profZalo()});
+  q("#zgen").onclick=async()=>{const m=q("#zmsg"),A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const code=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>A[x%32]).join("");
+    const r=await sb.from("zalo_codes").upsert({member:me,code,created_at:new Date().toISOString()});
+    if(r.error)return set(m,"Không tạo được mã: "+r.error.message+" (đã chạy profile.sql chưa?)",1);
+    PS.code=code;set(m,"");profZalo()};
+  q("#zun").onclick=async()=>{if(!confirm("Huỷ liên kết Zalo? Bot sẽ ngừng nhắn riêng cho bạn."))return;
+    const r=await sb.from("members").update({zalo_chat_id:null}).eq("id",me);
+    if(r.error)return set(q("#zmsg"),r.error.message,1);
+    await sb.from("zalo_codes").delete().eq("member",me);PS.code=null;await load();render()};
+  const fp=q("#fp");
+  fp.onsubmit=async e=>{e.preventDefault();const m=q("#pmsg");
+    if(fp.n1.value.length<6)return set(m,"Mật khẩu mới cần từ 6 ký tự.",1);
+    if(fp.n1.value!==fp.n2.value)return set(m,"Hai mật khẩu mới chưa giống nhau.",1);
+    set(m,"Đang đổi…");
+    const ses=(await sb.auth.getSession()).data.session;
+    const re=await sb.auth.signInWithPassword({email:ses.user.email,password:fp.cur.value});
+    if(re.error)return set(m,"Mật khẩu hiện tại không đúng.",1);
+    const u=await sb.auth.updateUser({password:fp.n1.value});
+    if(u.error)return set(m,"Không đổi được: "+u.error.message,1);
+    fp.reset();set(m,"✅ Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.")};
+}
 function renderPerson(id){
   const m=$("#main"),mine=id===me;
   if(m.dataset.t!==id){m.dataset.t=id;
-    m.innerHTML=`<div id="top"></div><form id="f" class="card"><input type="text" name="title" placeholder="${mine?"Việc cần làm… (tag @tên để giao cho người khác)":"Giao việc cho "+esc(nm(id))+"… (VD: Học bài)"}" required maxlength="120">${mine?'<div id="chips2"></div>':""}<select name="hs" class="hoa">${subjOpts}</select><select name="hoa" class="hoa" style="display:none"></select><input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">${mine?"Thêm việc":"Giao việc"}</button><div class="mu" style="width:100%">${mine?"Không tag ai thì việc là của bạn.":"Việc sẽ hiện ở tab của "+esc(nm(id))+"."}</div><div id="fmsg" style="width:100%;font-size:14px"></div></form><div id="list"></div>`;
+    m.innerHTML=`<div id="top"></div>${mine?PROF:""}<form id="f" class="card"><input type="text" name="title" placeholder="${mine?"Việc cần làm… (tag @tên để giao cho người khác)":"Giao việc cho "+esc(nm(id))+"… (VD: Học bài)"}" required maxlength="120">${mine?'<div id="chips2"></div>':""}<select name="hs" class="hoa">${subjOpts}</select><select name="hoa" class="hoa" style="display:none"></select><input type="date" name="due" value="${today()}"><span class="mu" style="align-self:center">Từ</span><input type="time" name="st"><span class="mu" style="align-self:center">đến</span><input type="time" name="et"><button class="pri">${mine?"Thêm việc":"Giao việc"}</button><div class="mu" style="width:100%">${mine?"Không tag ai thì việc là của bạn.":"Việc sẽ hiện ở tab của "+esc(nm(id))+"."}</div><div id="fmsg" style="width:100%;font-size:14px"></div></form><div id="list"></div>`;
+    if(mine)profInit();
     {const F=$("#f");F.hs.onchange=e=>{const i=e.target.value;F.hoa.innerHTML=i===""?"":lessonOpts(+i);F.hoa.style.display=i===""?"none":""};
       F.hoa.onchange=e=>{const o=e.target.selectedOptions[0],ti=F.querySelector("input[name=title]");if(o.value&&(!ti.value||ti.value===ti.dataset.a))ti.value=ti.dataset.a=o.dataset.t||o.textContent}}
     $("#f").onsubmit=async e=>{
@@ -242,7 +299,7 @@ function renderPerson(id){
     };
   }
   const list=tasks.filter(t=>t.assignee===id).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
-  const top=`<div class="card row" style="align-items:center">${av(id,64)}<div style="flex:1"><b>${esc(nm(id))}</b><div class="mu">${mine?"Tab của bạn":"Việc của "+esc(nm(id))}</div></div>${mine?'<label class="up">📷 Đổi ảnh<input type="file" accept="image/*" hidden id="avf"></label>':""}</div><h3>Hôm nay</h3>`+statBox(stat(list));
+  const top=`<div class="card row" style="align-items:center">${av(id,64)}<div style="flex:1"><b>${esc(nm(id))}</b><div class="mu">${bdText(id,mine)}</div></div>${mine?'<label class="up">📷 Đổi ảnh<input type="file" accept="image/*" hidden id="avf"></label>':""}</div><h3>Hôm nay</h3>`+statBox(stat(list));
   const tp=$("#top");
   if(tp.dataset.h!==top){tp.dataset.h=top;tp.innerHTML=top;const af=$("#avf");if(af)af.onchange=()=>{if(af.files[0])cropAvatar(af.files[0]);af.value=""}}
   if(mine){const ch=$("#chips2"),ti=$("#f input[name=title]");
@@ -251,7 +308,7 @@ function renderPerson(id){
   let h=list.map(t=>taskCard(t,false)).join("")||'<p class="mu">Chưa có việc.</p>';
   if(mine){const g=tasks.filter(t=>t.created_by===me&&t.assignee!==me).sort((a,b)=>(a.done-b.done)||key(a).localeCompare(key(b)));
     if(g.length)h+=`<h3>Tôi đã giao (${g.filter(t=>!t.done).length} chưa xong / ${g.length})</h3>`+g.map(t=>taskCard(t,true)).join("")}
-  $("#list").innerHTML=h;bind();
+  $("#list").innerHTML=h;if(mine)profZalo();bind();
 }
 // ===== Game đã tách sang trang riêng (repo tro-choi) =====
 const GAME_URL="https://giadinhsumhop.github.io/tro-choi/";
